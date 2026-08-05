@@ -32,7 +32,12 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&req)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		respondWithError(
+			w,
+			http.StatusInternalServerError,
+			"Error decoding request body",
+			err,
+		)
 		return
 	}
 
@@ -44,7 +49,7 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 			DisplayName: req.DisplayName,
 		})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		respondWithError(w, http.StatusInternalServerError, "Error creating user in database", err)
 		return
 	}
 
@@ -58,13 +63,5 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 		DisplayName: dbUser.DisplayName,
 	}
 
-	dat, err := json.Marshal(user)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(dat)
-
+	respondWithJSON(w, http.StatusOK, user)
 }
