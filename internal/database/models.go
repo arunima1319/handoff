@@ -18,6 +18,11 @@ type Domain struct {
 	Name      string
 }
 
+type DomainsUser struct {
+	DomainID uuid.UUID
+	UserID   uuid.UUID
+}
+
 type User struct {
 	ID          uuid.UUID
 	CreatedAt   time.Time

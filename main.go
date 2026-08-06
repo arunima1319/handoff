@@ -33,6 +33,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
 	mux.HandleFunc("POST /api/domains", apiCfg.handlerCreateDomain)
+	mux.HandleFunc("POST /api/domains/{domainID}/users", apiCfg.handlerAddUserToDomain)
+
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,
