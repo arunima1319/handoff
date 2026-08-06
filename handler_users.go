@@ -53,7 +53,7 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	//Serializing user into JSON and writing it in the response
+	//Writing the response
 
 	user := apiUser{
 		ID:          dbUser.ID,

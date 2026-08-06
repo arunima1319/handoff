@@ -32,7 +32,7 @@ func main() {
 	const port = "8080"
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
-
+	mux.HandleFunc("POST /api/domains", apiCfg.handlerCreateDomain)
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,
