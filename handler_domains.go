@@ -58,5 +58,17 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 		Name:      dbDomain.Name,
 	}
 
+	err = cfg.dbQueries.AddUserToDomain(
+		r.Context(),
+		database.AddUserToDomainParams{
+			DomainID: domain.ID,
+			UserID:   domain.Owner,
+		},
+	)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not create joining row in database", err)
+		return
+	}
+
 	respondWithJSON(w, http.StatusOK, domain)
 }
