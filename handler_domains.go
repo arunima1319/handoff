@@ -22,6 +22,41 @@ type createDomainRequest struct {
 	Name  string    `json:"name"`
 }
 
+func (cfg *apiConfig) domainOwnerTransaction(r *http.Request, domainData database.CreateDomainParams) (database.Domain, error) {
+
+	/*
+		Helper function to ensure that creating a domain
+		and adding the owner to the domain as a user is
+		a transaction
+	*/
+
+	dbDomain := database.Domain{}
+
+	tx, err := cfg.db.Begin()
+	if err != nil {
+		return dbDomain, err
+	}
+
+	defer tx.Rollback()
+
+	qtx := cfg.dbQueries.WithTx(tx)
+	dbDomain, err = qtx.CreateDomain(r.Context(), domainData)
+	if err != nil {
+		return dbDomain, err
+	}
+	err = qtx.AddUserToDomain(
+		r.Context(),
+		database.AddUserToDomainParams{
+			DomainID: dbDomain.ID,
+			UserID:   dbDomain.Owner,
+		})
+	if err != nil {
+		return dbDomain, err
+	}
+
+	return dbDomain, tx.Commit()
+}
+
 func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request) {
 
 	// decode request data
@@ -36,8 +71,8 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 
 	//create domain in database - will need authentication
 
-	dbDomain, err := cfg.dbQueries.CreateDomain(
-		r.Context(),
+	dbDomain, err := cfg.domainOwnerTransaction(
+		r,
 		database.CreateDomainParams{
 			Owner: req.Owner,
 			Name:  req.Name,
@@ -56,18 +91,6 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 		UpdatedAt: dbDomain.UpdatedAt,
 		Owner:     dbDomain.Owner,
 		Name:      dbDomain.Name,
-	}
-
-	err = cfg.dbQueries.AddUserToDomain(
-		r.Context(),
-		database.AddUserToDomainParams{
-			DomainID: domain.ID,
-			UserID:   domain.Owner,
-		},
-	)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not create joining row in database", err)
-		return
 	}
 
 	respondWithJSON(w, http.StatusOK, domain)

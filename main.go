@@ -13,6 +13,7 @@ import (
 
 type apiConfig struct {
 	dbQueries *database.Queries
+	db        *sql.DB
 }
 
 func main() {
@@ -27,6 +28,7 @@ func main() {
 	}
 
 	apiCfg := apiConfig{}
+	apiCfg.db = db
 	apiCfg.dbQueries = database.New(db)
 
 	const port = "8080"
