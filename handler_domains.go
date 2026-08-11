@@ -61,7 +61,6 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 
 	// decode request data
 	req := createDomainRequest{}
-	defer r.Body.Close()
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&req)
 	if err != nil {

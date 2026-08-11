@@ -26,8 +26,6 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 
 	req := createUserRequest{}
 
-	defer r.Body.Close()
-
 	// Deserializing the request payload
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&req)
