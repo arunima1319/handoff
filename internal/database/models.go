@@ -5,6 +5,7 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,6 +22,21 @@ type Domain struct {
 type DomainsUser struct {
 	DomainID uuid.UUID
 	UserID   uuid.UUID
+}
+
+type Task struct {
+	ID          uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Description string
+	DomainID    uuid.UUID
+	AssigneeID  uuid.UUID
+	CompletedAt sql.NullTime
+}
+
+type TaskDependency struct {
+	TaskID       uuid.UUID
+	DependencyID uuid.UUID
 }
 
 type User struct {
