@@ -45,3 +45,24 @@ func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, e
 	)
 	return i, err
 }
+
+const getTaskByID = `-- name: GetTaskByID :one
+
+SELECT id, created_at, updated_at, description, domain_id, assignee_id, completed_at FROM tasks 
+WHERE id = $1
+`
+
+func (q *Queries) GetTaskByID(ctx context.Context, id uuid.UUID) (Task, error) {
+	row := q.db.QueryRowContext(ctx, getTaskByID, id)
+	var i Task
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Description,
+		&i.DomainID,
+		&i.AssigneeID,
+		&i.CompletedAt,
+	)
+	return i, err
+}
