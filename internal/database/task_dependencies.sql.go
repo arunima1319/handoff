@@ -29,3 +29,32 @@ func (q *Queries) CreateTaskDependency(ctx context.Context, arg CreateTaskDepend
 	_, err := q.db.ExecContext(ctx, createTaskDependency, arg.TaskID, arg.DependencyID)
 	return err
 }
+
+const getTaskDependenciesByTask = `-- name: GetTaskDependenciesByTask :many
+
+SELECT task_id, dependency_id FROM task_dependencies
+WHERE task_id = $1
+`
+
+func (q *Queries) GetTaskDependenciesByTask(ctx context.Context, taskID uuid.UUID) ([]TaskDependency, error) {
+	rows, err := q.db.QueryContext(ctx, getTaskDependenciesByTask, taskID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TaskDependency
+	for rows.Next() {
+		var i TaskDependency
+		if err := rows.Scan(&i.TaskID, &i.DependencyID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

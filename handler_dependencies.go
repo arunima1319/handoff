@@ -17,6 +17,11 @@ type createDependencyResponse struct {
 	Message string `json:"message"`
 }
 
+type apiTaskDependency struct {
+	taskID       uuid.UUID
+	dependencyID uuid.UUID
+}
+
 func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http.Request) {
 
 	req := createDependencyRequest{}
@@ -44,9 +49,18 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 		respondWithError(w, http.StatusInternalServerError, "Could not get dependency from database", err)
 		return
 	}
+	if dbDependency.CompletedAt.Valid {
+		respondWithError(w, http.StatusBadRequest, "Cannot make a task dependent on a completed task", errors.New("Dependency is already completed"))
+		return
+	}
+
 	dbTask, err := cfg.dbQueries.GetTaskByID(r.Context(), taskID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Could not get task from database", err)
+		return
+	}
+	if dbTask.CompletedAt.Valid {
+		respondWithError(w, http.StatusBadRequest, "Cannot add a dependency to a completed task", errors.New("Task is already completed"))
 		return
 	}
 	if dbDependency.DomainID != dbTask.DomainID {
@@ -54,6 +68,7 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 		return
 	}
 
+	// Creating Task Dependency in Database
 	err = cfg.dbQueries.CreateTaskDependency(
 		r.Context(),
 		database.CreateTaskDependencyParams{
