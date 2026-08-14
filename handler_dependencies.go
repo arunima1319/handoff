@@ -17,11 +17,6 @@ type createDependencyResponse struct {
 	Message string `json:"message"`
 }
 
-type apiTaskDependency struct {
-	taskID       uuid.UUID
-	dependencyID uuid.UUID
-}
-
 func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http.Request) {
 
 	req := createDependencyRequest{}
@@ -68,6 +63,12 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 		return
 	}
 
+	//Checking if dependency leads to a cycle in the dependency graph
+
+	visitedIDs := make(map[uuid.UUID]struct{})
+
+	cfg.checkForCycle(r, visitedIDs, taskID, req.DependencyID)
+
 	// Creating Task Dependency in Database
 	err = cfg.dbQueries.CreateTaskDependency(
 		r.Context(),
@@ -86,4 +87,51 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 
 	respondWithJSON(w, http.StatusOK, msg)
 
+}
+
+func (cfg *apiConfig) checkForCycle(r *http.Request, visitedIDs map[uuid.UUID]struct{}, ogTaskID uuid.UUID, dependencyID uuid.UUID) (bool, error) {
+
+	//To check for cycle we are doing a DFS using recursion to find the original Task ID
+	//If task ID is found, there is a cycle, if not, there is not
+
+	dbDependencies, err := cfg.dbQueries.GetTaskDependenciesByTask(
+		r.Context(),
+		dependencyID,
+	)
+	if err != nil {
+		return false, err
+	}
+
+	for _, row := range dbDependencies {
+		_, ok := visitedIDs[row.DependencyID]
+		if ok {
+			continue
+		}
+
+		dependency, err := cfg.dbQueries.GetTaskByID(r.Context(), row.DependencyID)
+		if err != nil {
+			return false, err
+		}
+
+		if dependency.CompletedAt.Valid {
+			visitedIDs[dependency.ID] = struct{}{}
+			continue
+		}
+
+		if dependency.ID == ogTaskID {
+			return true, nil
+		}
+
+		visitedIDs[dependency.ID] = struct{}{}
+
+		value, err := cfg.checkForCycle(r, visitedIDs, ogTaskID, dependency.ID)
+		if err != nil {
+			return false, err
+		}
+		if value {
+			return value, nil
+		}
+	}
+
+	return false, nil
 }
