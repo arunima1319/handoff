@@ -30,12 +30,8 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&req)
 	if err != nil {
-		respondWithError(
-			w,
-			http.StatusInternalServerError,
-			"Error decoding request body",
-			err,
-		)
+		statusCode, msg := reqJSONError(err)
+		respondWithError(w, statusCode, msg, err)
 		return
 	}
 

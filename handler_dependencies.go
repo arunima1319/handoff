@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -24,7 +25,8 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&req)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Could not decode request body", err)
+		statusCode, msg := reqJSONError(err)
+		respondWithError(w, statusCode, msg, err)
 		return
 	}
 
@@ -41,25 +43,33 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 
 	dbDependency, err := cfg.dbQueries.GetTaskByID(r.Context(), req.DependencyID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not get dependency from database", err)
+		statusCode := http.StatusInternalServerError
+		if errors.Is(err, sql.ErrNoRows) {
+			statusCode = http.StatusNotFound
+		}
+		respondWithError(w, statusCode, "Could not get dependency from database", err)
 		return
 	}
 	if dbDependency.CompletedAt.Valid {
-		respondWithError(w, http.StatusBadRequest, "Cannot make a task dependent on a completed task", errors.New("Dependency is already completed"))
+		respondWithError(w, http.StatusBadRequest, "Cannot make a task dependent on a completed task: ", errors.New("dependency is already completed"))
 		return
 	}
 
 	dbTask, err := cfg.dbQueries.GetTaskByID(r.Context(), taskID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not get task from database", err)
+		statusCode := http.StatusInternalServerError
+		if errors.Is(err, sql.ErrNoRows) {
+			statusCode = http.StatusNotFound
+		}
+		respondWithError(w, statusCode, "Could not get task from database", err)
 		return
 	}
 	if dbTask.CompletedAt.Valid {
-		respondWithError(w, http.StatusBadRequest, "Cannot add a dependency to a completed task", errors.New("Task is already completed"))
+		respondWithError(w, http.StatusBadRequest, "Cannot add a dependency to a completed task: ", errors.New("task is already completed"))
 		return
 	}
 	if dbDependency.DomainID != dbTask.DomainID {
-		respondWithError(w, http.StatusBadRequest, "A task and its dependency must be in same domain", errors.New("Dependency not in same domain"))
+		respondWithError(w, http.StatusBadRequest, "A task and its dependency must be in same domain: ", errors.New("dependency not in same domain"))
 		return
 	}
 

@@ -64,7 +64,8 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&req)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not decode request payload", err)
+		statusCode, msg := reqJSONError(err)
+		respondWithError(w, statusCode, msg, err)
 		return
 	}
 

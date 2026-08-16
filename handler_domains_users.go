@@ -23,7 +23,8 @@ func (cfg *apiConfig) handlerAddUserToDomain(w http.ResponseWriter, r *http.Requ
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&req)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not decode request body", err)
+		statusCode, msg := reqJSONError(err)
+		respondWithError(w, statusCode, msg, err)
 		return
 	}
 
