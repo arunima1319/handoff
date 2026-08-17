@@ -20,6 +20,13 @@ func main() {
 
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL is not set")
+	}
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("PORT is not set")
+	}
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
@@ -31,8 +38,8 @@ func main() {
 	apiCfg.db = db
 	apiCfg.dbQueries = database.New(db)
 
-	const port = "8080"
 	mux := http.NewServeMux()
+	mux.Handle("GET /", http.FileServer(http.Dir("./app")))
 	mux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
 	mux.HandleFunc("POST /api/domains", apiCfg.handlerCreateDomain)
 	mux.HandleFunc("POST /api/domains/{domainID}/users", apiCfg.handlerAddUserToDomain)
