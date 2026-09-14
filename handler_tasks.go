@@ -26,6 +26,42 @@ type createTaskRequest struct {
 	AssigneeID  uuid.UUID `json:"assignee_id"`
 }
 
+func (cfg *apiConfig) handlerGetTasksOfDomain(w http.ResponseWriter, r *http.Request) {
+
+	domainID, err := uuid.Parse(r.PathValue("domainID"))
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not parse domain ID", err)
+		return
+	}
+
+	dbTasks, err := cfg.dbQueries.GetTasksOfDomain(
+		r.Context(),
+		domainID,
+	)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not get tasks from domain", err)
+		return
+	}
+
+	apiTaskList := []apiTask{}
+	for _, dbTask := range dbTasks {
+		task := apiTask{
+			ID:          dbTask.ID,
+			CreatedAt:   dbTask.CreatedAt,
+			UpdatedAt:   dbTask.UpdatedAt,
+			Description: dbTask.Description,
+			DomainID:    dbTask.DomainID,
+			AssigneeID:  dbTask.AssigneeID,
+			CompletedAt: dbTask.CompletedAt,
+		}
+		apiTaskList = append(apiTaskList, task)
+
+	}
+
+	respondWithJSON(w, http.StatusOK, apiTaskList)
+
+}
+
 func (cfg *apiConfig) handlerCreateTask(w http.ResponseWriter, r *http.Request) {
 
 	req := createTaskRequest{}

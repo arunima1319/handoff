@@ -66,3 +66,40 @@ func (q *Queries) GetTaskByID(ctx context.Context, id uuid.UUID) (Task, error) {
 	)
 	return i, err
 }
+
+const getTasksOfDomain = `-- name: GetTasksOfDomain :many
+
+SELECT id, created_at, updated_at, description, domain_id, assignee_id, completed_at FROM tasks 
+WHERE domain_id = $1
+`
+
+func (q *Queries) GetTasksOfDomain(ctx context.Context, domainID uuid.UUID) ([]Task, error) {
+	rows, err := q.db.QueryContext(ctx, getTasksOfDomain, domainID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Task
+	for rows.Next() {
+		var i Task
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Description,
+			&i.DomainID,
+			&i.AssigneeID,
+			&i.CompletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

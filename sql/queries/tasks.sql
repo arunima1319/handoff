@@ -15,3 +15,9 @@ RETURNING *;
 
 SELECT * FROM tasks 
 WHERE id = $1; 
+
+-- name: GetTasksOfDomain :many 
+
+SELECT * FROM tasks 
+WHERE domain_id = $1; 
+
