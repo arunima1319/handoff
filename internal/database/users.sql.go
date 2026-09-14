@@ -7,6 +7,8 @@ package database
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -38,4 +40,41 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.DisplayName,
 	)
 	return i, err
+}
+
+const getUsersOfDomain = `-- name: GetUsersOfDomain :many
+
+SELECT users.id, users.created_at, users.updated_at, users.email, users.display_name 
+FROM users JOIN domains_users 
+ON users.id = domains_users.user_id
+WHERE domain_id = $1
+`
+
+func (q *Queries) GetUsersOfDomain(ctx context.Context, domainID uuid.UUID) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, getUsersOfDomain, domainID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Email,
+			&i.DisplayName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

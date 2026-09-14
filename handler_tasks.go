@@ -43,7 +43,7 @@ func (cfg *apiConfig) handlerGetTasksOfDomain(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	apiTaskList := []apiTask{}
+	tasks := []apiTask{}
 	for _, dbTask := range dbTasks {
 		task := apiTask{
 			ID:          dbTask.ID,
@@ -54,11 +54,11 @@ func (cfg *apiConfig) handlerGetTasksOfDomain(w http.ResponseWriter, r *http.Req
 			AssigneeID:  dbTask.AssigneeID,
 			CompletedAt: dbTask.CompletedAt,
 		}
-		apiTaskList = append(apiTaskList, task)
+		tasks = append(tasks, task)
 
 	}
 
-	respondWithJSON(w, http.StatusOK, apiTaskList)
+	respondWithJSON(w, http.StatusOK, tasks)
 
 }
 

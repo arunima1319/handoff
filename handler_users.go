@@ -22,6 +22,34 @@ type createUserRequest struct {
 	DisplayName string `json:"display_name"`
 }
 
+func (cfg *apiConfig) handlerGetUsersOfDomain(w http.ResponseWriter, r *http.Request) {
+
+	domainID, err := uuid.Parse(r.PathValue("domainID"))
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not parse domain ID:", err)
+	}
+
+	dbUsers, err := cfg.dbQueries.GetUsersOfDomain(r.Context(), domainID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not get users from database:", err)
+	}
+
+	users := []apiUser{}
+
+	for _, dbUser := range dbUsers {
+		user := apiUser{
+			ID:          dbUser.ID,
+			CreatedAt:   dbUser.CreatedAt,
+			UpdatedAt:   dbUser.UpdatedAt,
+			Email:       dbUser.Email,
+			DisplayName: dbUser.DisplayName,
+		}
+
+		users = append(users, user)
+	}
+
+	respondWithJSON(w, http.StatusOK, users)
+}
 func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 
 	req := createUserRequest{}

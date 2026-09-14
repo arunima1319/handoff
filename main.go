@@ -47,6 +47,7 @@ func main() {
 	mux.HandleFunc("POST /api/tasks", apiCfg.handlerCreateTask)
 	mux.HandleFunc("POST /api/tasks/{taskID}/dependencies", apiCfg.handlerCreateTaskDependency)
 	mux.HandleFunc("GET /api/domains/{domainID}/tasks", apiCfg.handlerGetTasksOfDomain)
+	mux.HandleFunc("GET /api/domains/{domainID}/users", apiCfg.handlerGetUsersOfDomain)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
