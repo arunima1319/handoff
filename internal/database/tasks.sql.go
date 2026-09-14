@@ -103,3 +103,46 @@ func (q *Queries) GetTasksOfDomain(ctx context.Context, domainID uuid.UUID) ([]T
 	}
 	return items, nil
 }
+
+const getUnblockedUserTasks = `-- name: GetUnblockedUserTasks :many
+
+WITH incomplete_dependencies AS (
+    SELECT task_dependencies.task_id FROM tasks JOIN task_dependencies
+    ON tasks.id = task_dependencies.dependency_id
+    WHERE tasks.completed_at IS NULL
+)
+SELECT tasks.id, tasks.created_at, tasks.updated_at, tasks.description, tasks.domain_id, tasks.assignee_id, tasks.completed_at FROM tasks
+WHERE tasks.id NOT IN (SELECT task_id FROM incomplete_dependencies)
+AND tasks.assignee_id = $1
+`
+
+func (q *Queries) GetUnblockedUserTasks(ctx context.Context, assigneeID uuid.UUID) ([]Task, error) {
+	rows, err := q.db.QueryContext(ctx, getUnblockedUserTasks, assigneeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Task
+	for rows.Next() {
+		var i Task
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Description,
+			&i.DomainID,
+			&i.AssigneeID,
+			&i.CompletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

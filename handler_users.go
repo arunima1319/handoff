@@ -27,11 +27,13 @@ func (cfg *apiConfig) handlerGetUsersOfDomain(w http.ResponseWriter, r *http.Req
 	domainID, err := uuid.Parse(r.PathValue("domainID"))
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Could not parse domain ID:", err)
+		return
 	}
 
 	dbUsers, err := cfg.dbQueries.GetUsersOfDomain(r.Context(), domainID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Could not get users from database:", err)
+		return
 	}
 
 	users := []apiUser{}
