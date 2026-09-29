@@ -41,3 +41,13 @@ func (q *Queries) CreateDomain(ctx context.Context, arg CreateDomainParams) (Dom
 	)
 	return i, err
 }
+
+const deleteAllDomains = `-- name: DeleteAllDomains :exec
+
+DELETE FROM domains
+`
+
+func (q *Queries) DeleteAllDomains(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteAllDomains)
+	return err
+}

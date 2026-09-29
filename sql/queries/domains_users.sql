@@ -6,3 +6,6 @@ VALUES(
     $2
 ); 
 
+-- name: DeleteAllUsersFromDomains :exec
+
+DELETE FROM domains_users; 

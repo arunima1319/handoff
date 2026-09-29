@@ -9,3 +9,7 @@ VALUES(
     $2
 )
 RETURNING *;
+
+-- name: DeleteAllDomains :exec
+
+DELETE FROM domains; 

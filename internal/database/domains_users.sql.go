@@ -29,3 +29,13 @@ func (q *Queries) AddUserToDomain(ctx context.Context, arg AddUserToDomainParams
 	_, err := q.db.ExecContext(ctx, addUserToDomain, arg.DomainID, arg.UserID)
 	return err
 }
+
+const deleteAllUsersFromDomains = `-- name: DeleteAllUsersFromDomains :exec
+
+DELETE FROM domains_users
+`
+
+func (q *Queries) DeleteAllUsersFromDomains(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteAllUsersFromDomains)
+	return err
+}

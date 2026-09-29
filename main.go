@@ -49,6 +49,7 @@ func main() {
 	mux.HandleFunc("GET /api/domains/{domainID}/tasks", apiCfg.handlerGetTasksOfDomain)
 	mux.HandleFunc("GET /api/domains/{domainID}/users", apiCfg.handlerGetUsersOfDomain)
 	mux.HandleFunc("GET /api/users/{userID}/tasks", apiCfg.handlerGetUnblockedUserTasks)
+	mux.HandleFunc("POST /admin/reset", apiCfg.handlerResetDatabase)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

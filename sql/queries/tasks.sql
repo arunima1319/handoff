@@ -33,3 +33,6 @@ WHERE tasks.id NOT IN (SELECT task_id FROM incomplete_dependencies)
 AND tasks.assignee_id = $1; 
 
 
+-- name: DeleteAllTasks :exec
+
+DELETE FROM tasks; 
