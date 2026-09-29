@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/arunima1319/handoff/internal/auth"
 	"github.com/arunima1319/handoff/internal/database"
 	"github.com/google/uuid"
 )
@@ -19,6 +20,7 @@ type apiUser struct {
 
 type createUserRequest struct {
 	Email       string `json:"email"`
+	Password    string `json:"password"`
 	DisplayName string `json:"display_name"`
 }
 
@@ -65,12 +67,20 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	//Hashing password
+	hashedPassword, err := auth.HashPassword(req.Password)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not hash password", err)
+		return
+	}
+
 	// Creating the user in the database
 	dbUser, err := cfg.dbQueries.CreateUser(
 		r.Context(),
 		database.CreateUserParams{
-			Email:       req.Email,
-			DisplayName: req.DisplayName,
+			Email:          req.Email,
+			DisplayName:    req.DisplayName,
+			HashedPassword: hashedPassword,
 		})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error creating user in database", err)
