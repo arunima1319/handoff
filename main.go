@@ -14,6 +14,7 @@ import (
 type apiConfig struct {
 	dbQueries *database.Queries
 	db        *sql.DB
+	jwtSecret string
 }
 
 func main() {
@@ -27,6 +28,10 @@ func main() {
 	if port == "" {
 		log.Fatal("PORT is not set")
 	}
+	jwtKey := os.Getenv("SECRET")
+	if jwtKey == "" {
+		log.Fatal("SECRET is not set")
+	}
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
@@ -37,6 +42,7 @@ func main() {
 	apiCfg := apiConfig{}
 	apiCfg.db = db
 	apiCfg.dbQueries = database.New(db)
+	apiCfg.jwtSecret = jwtKey
 
 	mux := http.NewServeMux()
 	mux.Handle("GET /", http.FileServer(http.Dir("./app")))
@@ -49,6 +55,7 @@ func main() {
 	mux.HandleFunc("GET /api/domains/{domainID}/tasks", apiCfg.handlerGetTasksOfDomain)
 	mux.HandleFunc("GET /api/domains/{domainID}/users", apiCfg.handlerGetUsersOfDomain)
 	mux.HandleFunc("GET /api/users/{userID}/tasks", apiCfg.handlerGetUnblockedUserTasks)
+	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerResetDatabase)
 
 	srv := &http.Server{
