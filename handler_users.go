@@ -20,6 +20,7 @@ type apiUser struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 	Email       string    `json:"email"`
 	DisplayName string    `json:"display_name"`
+	AccessToken string    `json:"access_token"`
 }
 
 type createUserRequest struct {
@@ -106,6 +107,19 @@ func (cfg *apiConfig) helperCreateUser(ctx context.Context, req createUserReques
 		return apiUser{}, http.StatusInternalServerError, msgServerError, err
 	}
 
+	//Creating access token
+
+	expiration, err := time.ParseDuration("1h")
+	if err != nil {
+		log.Printf("could not parse expiration time: %s", err)
+		return apiUser{}, http.StatusInternalServerError, msgServerError, err
+	}
+	token, err := auth.MakeJWT(dbUser.ID, cfg.jwtSecret, expiration)
+	if err != nil {
+		log.Printf("could not make JWT: %s", err)
+		return apiUser{}, http.StatusInternalServerError, msgServerError, err
+	}
+
 	//Writing the response
 
 	user := apiUser{
@@ -114,6 +128,7 @@ func (cfg *apiConfig) helperCreateUser(ctx context.Context, req createUserReques
 		UpdatedAt:   dbUser.UpdatedAt,
 		Email:       dbUser.Email,
 		DisplayName: dbUser.DisplayName,
+		AccessToken: token,
 	}
 
 	return user, http.StatusOK, "", nil
