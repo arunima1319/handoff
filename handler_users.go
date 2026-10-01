@@ -85,7 +85,7 @@ func (cfg *apiConfig) helperCreateUser(ctx context.Context, req createUserReques
 	hashedPassword, err := auth.HashPassword(req.Password)
 	if err != nil {
 		log.Printf("Could not hash password: %s", err)
-		return apiUser{}, http.StatusInternalServerError, "internal server error", err
+		return apiUser{}, http.StatusInternalServerError, msgServerError, err
 	}
 
 	// Creating the user in the database

@@ -8,8 +8,8 @@ let accessToken;
 
 async function login() {
 
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
 
     try {
         const res = await fetch('api/login', {
