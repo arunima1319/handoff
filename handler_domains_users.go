@@ -24,13 +24,13 @@ func (cfg *apiConfig) handlerAddUserToDomain(w http.ResponseWriter, r *http.Requ
 	err := dec.Decode(&req)
 	if err != nil {
 		statusCode, msg := reqJSONError(err)
-		respondWithError(w, statusCode, msg, err)
+		respondWithError(w, statusCode, msg)
 		return
 	}
 
 	domainID, err := uuid.Parse(r.PathValue("domainID"))
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not parse domain ID", err)
+		respondWithError(w, http.StatusInternalServerError, "Could not parse domain ID")
 		return
 	}
 	err = cfg.dbQueries.AddUserToDomain(
@@ -41,7 +41,7 @@ func (cfg *apiConfig) handlerAddUserToDomain(w http.ResponseWriter, r *http.Requ
 		},
 	)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not create joining row in database", err)
+		respondWithError(w, http.StatusInternalServerError, "Could not create joining row in database")
 		return
 	}
 

@@ -3,20 +3,25 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 )
+
+const msgServerError = "internal server error"
 
 func reqJSONError(err error) (code int, msg string) {
 	var syntaxError *json.SyntaxError
 	if errors.As(err, &syntaxError) {
-		return http.StatusBadRequest, "Malformed JSON: "
+		log.Printf("Malformed JSON: %s", err)
+		return http.StatusBadRequest, "JSON is malformed"
 	}
 
 	var typeErr *json.UnmarshalTypeError
 	if errors.As(err, &typeErr) {
-		return http.StatusBadRequest, "Incorrect fields: "
+		log.Printf("Incorrect field types: %s", err)
+		return http.StatusBadRequest, "Field types are incorrect"
 	}
 
-	return http.StatusBadRequest, "Invalid request body: "
+	return http.StatusBadRequest, "Invalid request body"
 
 }

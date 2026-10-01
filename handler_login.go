@@ -28,7 +28,6 @@ type loginResponse struct {
 var errCouldNotLogin = errors.New("could not login")
 
 const msgLoginError = "invalid user email or password"
-const msgServerError = "internal server error"
 
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 
@@ -38,13 +37,13 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	err := dec.Decode(&req)
 	if err != nil {
 		code, msg := reqJSONError(err)
-		respondWithError(w, code, msg, err)
+		respondWithError(w, code, msg)
 		return
 	}
 
 	payload, code, msg, err := cfg.helperLogin(r.Context(), req.Email, req.Password)
 	if err != nil {
-		respondWithError(w, code, msg, err)
+		respondWithError(w, code, msg)
 		return
 	}
 

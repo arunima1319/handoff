@@ -10,7 +10,7 @@ func (cfg *apiConfig) handlerResetDatabase(w http.ResponseWriter, r *http.Reques
 
 	tx, err := cfg.db.Begin()
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, msg, err)
+		respondWithError(w, http.StatusInternalServerError, msg)
 		return
 	}
 
@@ -20,31 +20,31 @@ func (cfg *apiConfig) handlerResetDatabase(w http.ResponseWriter, r *http.Reques
 
 	err = qtx.DeleteAllTasks(r.Context())
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, msg, err)
+		respondWithError(w, http.StatusInternalServerError, msg)
 		return
 	}
 
 	err = qtx.DeleteAllUsersFromDomains(r.Context())
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, msg, err)
+		respondWithError(w, http.StatusInternalServerError, msg)
 		return
 	}
 
 	err = qtx.DeleteAllDomains(r.Context())
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, msg, err)
+		respondWithError(w, http.StatusInternalServerError, msg)
 		return
 	}
 
 	err = qtx.DeleteAllUsers(r.Context())
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, msg, err)
+		respondWithError(w, http.StatusInternalServerError, msg)
 		return
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, msg, err)
+		respondWithError(w, http.StatusInternalServerError, msg)
 		return
 	}
 

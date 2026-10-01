@@ -65,7 +65,7 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 	err := dec.Decode(&req)
 	if err != nil {
 		statusCode, msg := reqJSONError(err)
-		respondWithError(w, statusCode, msg, err)
+		respondWithError(w, statusCode, msg)
 		return
 	}
 
@@ -79,7 +79,7 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 		},
 	)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not create domain in database", err)
+		respondWithError(w, http.StatusInternalServerError, "Could not create domain in database")
 		return
 	}
 

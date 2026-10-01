@@ -30,13 +30,13 @@ func (cfg *apiConfig) handlerGetUnblockedUserTasks(w http.ResponseWriter, r *htt
 
 	userID, err := uuid.Parse(r.PathValue("userID"))
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not parse user ID:", err)
+		respondWithError(w, http.StatusInternalServerError, "Could not parse user ID")
 		return
 	}
 
 	dbTasks, err := cfg.dbQueries.GetUnblockedUserTasks(r.Context(), userID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not get tasks:", err)
+		respondWithError(w, http.StatusInternalServerError, "Could not get tasks")
 		return
 	}
 
@@ -62,7 +62,7 @@ func (cfg *apiConfig) handlerGetTasksOfDomain(w http.ResponseWriter, r *http.Req
 
 	domainID, err := uuid.Parse(r.PathValue("domainID"))
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not parse domain ID", err)
+		respondWithError(w, http.StatusInternalServerError, "Could not parse domain ID")
 		return
 	}
 
@@ -71,7 +71,7 @@ func (cfg *apiConfig) handlerGetTasksOfDomain(w http.ResponseWriter, r *http.Req
 		domainID,
 	)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not get tasks from domain", err)
+		respondWithError(w, http.StatusInternalServerError, "Could not get tasks from domain")
 		return
 	}
 
@@ -102,7 +102,7 @@ func (cfg *apiConfig) handlerCreateTask(w http.ResponseWriter, r *http.Request) 
 	err := dec.Decode(&req)
 	if err != nil {
 		statusCode, msg := reqJSONError(err)
-		respondWithError(w, statusCode, msg, err)
+		respondWithError(w, statusCode, msg)
 		return
 	}
 
@@ -114,7 +114,7 @@ func (cfg *apiConfig) handlerCreateTask(w http.ResponseWriter, r *http.Request) 
 			AssigneeID:  req.AssigneeID,
 		})
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not create task in database", err)
+		respondWithError(w, http.StatusInternalServerError, "Could not create task in database")
 		return
 	}
 

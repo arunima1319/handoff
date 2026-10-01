@@ -26,18 +26,18 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 	err := dec.Decode(&req)
 	if err != nil {
 		statusCode, msg := reqJSONError(err)
-		respondWithError(w, statusCode, msg, err)
+		respondWithError(w, statusCode, msg)
 		return
 	}
 
 	taskID, err := uuid.Parse(r.PathValue("taskID"))
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Could not parse Task ID", err)
+		respondWithError(w, http.StatusBadRequest, "Could not parse Task ID")
 		return
 	}
 
 	if taskID == req.DependencyID {
-		respondWithError(w, http.StatusBadRequest, "Task cannot be dependent on itself", errors.New("Task and Dependency have same ID"))
+		respondWithError(w, http.StatusBadRequest, "Task cannot be dependent on itself")
 		return
 	}
 
@@ -47,11 +47,11 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 		if errors.Is(err, sql.ErrNoRows) {
 			statusCode = http.StatusNotFound
 		}
-		respondWithError(w, statusCode, "Could not get dependency from database", err)
+		respondWithError(w, statusCode, "Could not get dependency from database")
 		return
 	}
 	if dbDependency.CompletedAt.Valid {
-		respondWithError(w, http.StatusBadRequest, "Cannot make a task dependent on a completed task: ", errors.New("dependency is already completed"))
+		respondWithError(w, http.StatusBadRequest, "Cannot make a task dependent on a completed task")
 		return
 	}
 
@@ -61,15 +61,15 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 		if errors.Is(err, sql.ErrNoRows) {
 			statusCode = http.StatusNotFound
 		}
-		respondWithError(w, statusCode, "Could not get task from database", err)
+		respondWithError(w, statusCode, "Could not get task from database")
 		return
 	}
 	if dbTask.CompletedAt.Valid {
-		respondWithError(w, http.StatusBadRequest, "Cannot add a dependency to a completed task: ", errors.New("task is already completed"))
+		respondWithError(w, http.StatusBadRequest, "Cannot add a dependency to a completed task")
 		return
 	}
 	if dbDependency.DomainID != dbTask.DomainID {
-		respondWithError(w, http.StatusBadRequest, "A task and its dependency must be in same domain: ", errors.New("dependency not in same domain"))
+		respondWithError(w, http.StatusBadRequest, "A task and its dependency must be in same domain")
 		return
 	}
 
@@ -87,7 +87,7 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 			DependencyID: req.DependencyID,
 		})
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not add dependency in database", err)
+		respondWithError(w, http.StatusInternalServerError, "Could not add dependency in database")
 		return
 	}
 
