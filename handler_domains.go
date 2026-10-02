@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -18,8 +19,7 @@ type apiDomain struct {
 }
 
 type createDomainRequest struct {
-	Owner uuid.UUID `json:"owner"`
-	Name  string    `json:"name"`
+	Name string `json:"name"`
 }
 
 func (cfg *apiConfig) domainOwnerTransaction(r *http.Request, domainData database.CreateDomainParams) (database.Domain, error) {
@@ -34,6 +34,7 @@ func (cfg *apiConfig) domainOwnerTransaction(r *http.Request, domainData databas
 
 	tx, err := cfg.db.Begin()
 	if err != nil {
+		log.Printf("error in beginning domain owner transaction: %s", err)
 		return dbDomain, err
 	}
 
@@ -42,6 +43,7 @@ func (cfg *apiConfig) domainOwnerTransaction(r *http.Request, domainData databas
 	qtx := cfg.dbQueries.WithTx(tx)
 	dbDomain, err = qtx.CreateDomain(r.Context(), domainData)
 	if err != nil {
+		log.Printf("error in creating domain in db as part of transaction: %s", err)
 		return dbDomain, err
 	}
 	err = qtx.AddUserToDomain(
@@ -51,6 +53,7 @@ func (cfg *apiConfig) domainOwnerTransaction(r *http.Request, domainData databas
 			UserID:   dbDomain.Owner,
 		})
 	if err != nil {
+		log.Printf("error in adding user to domain in db as part of transaction: %s", err)
 		return dbDomain, err
 	}
 
@@ -59,10 +62,18 @@ func (cfg *apiConfig) domainOwnerTransaction(r *http.Request, domainData databas
 
 func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request) {
 
+	//authenticating user
+
+	userID, errorCode, errorMsg, err := cfg.authenticateRequest(r)
+	if err != nil {
+		respondWithError(w, errorCode, errorMsg)
+		return
+	}
+
 	// decode request data
 	req := createDomainRequest{}
 	dec := json.NewDecoder(r.Body)
-	err := dec.Decode(&req)
+	err = dec.Decode(&req)
 	if err != nil {
 		statusCode, msg := reqJSONError(err)
 		respondWithError(w, statusCode, msg)
@@ -74,12 +85,13 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 	dbDomain, err := cfg.domainOwnerTransaction(
 		r,
 		database.CreateDomainParams{
-			Owner: req.Owner,
+			Owner: userID,
 			Name:  req.Name,
 		},
 	)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not create domain in database")
+		log.Printf("domain creation transaction failed: %s", err)
+		respondWithError(w, http.StatusInternalServerError, "could not create domain")
 		return
 	}
 

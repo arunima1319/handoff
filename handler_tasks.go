@@ -31,12 +31,13 @@ func (cfg *apiConfig) handlerGetUnblockedUserTasks(w http.ResponseWriter, r *htt
 
 	userID, code, errorMsg, err := cfg.authenticateRequest(r)
 	if err != nil {
-		log.Printf("could not authenticate request")
 		respondWithError(w, code, errorMsg)
+		return
 	}
 
 	dbTasks, err := cfg.dbQueries.GetUnblockedUserTasks(r.Context(), userID)
 	if err != nil {
+		log.Printf("could not get tasks from database: %s", err)
 		respondWithError(w, http.StatusInternalServerError, "Could not get tasks")
 		return
 	}
