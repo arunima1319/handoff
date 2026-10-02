@@ -97,14 +97,37 @@ async function renderUserPage(user) {
             throw new Error(`Failed to get tasks: ${data.error}`)
         } else {
             taskList = document.createElement('ul');
-            document.getElementById('user-page').appendChild(taskList);
+            document.getElementById('actionable-tasks').appendChild(taskList);
             for (let i = 0; i < data.length; i++) {
                 task = document.createElement('li');
                 task.textContent = data[i].description;
                 taskList.appendChild(task);
             };
+        };
 
-        }
+        const resDomain = await fetch('/api/users/me/domains', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${user.access_token}`,
+            },
+        });
+
+        const dataDomain = await resDomain.json();
+
+        if (!resDomain.ok) {
+            throw new Error(`Failed to get domains: ${dataDomain.error}`)
+        } else {
+            domainList = document.createElement('ul');
+            document.getElementById('domains').appendChild(domainList);
+            for (let i = 0; i < data.length; i++) {
+                domain = document.createElement('li');
+                domain.textContent = dataDomain[i].name;
+                domainList.appendChild(domain);
+            };
+        };
+
+
     } catch (error) {
         alert(`Error: ${error.message}`)
     }
