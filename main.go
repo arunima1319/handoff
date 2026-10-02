@@ -54,7 +54,7 @@ func main() {
 	mux.HandleFunc("POST /api/tasks/{taskID}/dependencies", apiCfg.handlerCreateTaskDependency)
 	mux.HandleFunc("GET /api/domains/{domainID}/tasks", apiCfg.handlerGetTasksOfDomain)
 	mux.HandleFunc("GET /api/domains/{domainID}/users", apiCfg.handlerGetUsersOfDomain)
-	mux.HandleFunc("GET /api/users/{userID}/tasks", apiCfg.handlerGetUnblockedUserTasks)
+	mux.HandleFunc("GET /api/users/me/tasks", apiCfg.handlerGetUnblockedUserTasks)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerResetDatabase)
 

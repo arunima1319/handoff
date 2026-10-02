@@ -3,9 +3,11 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
+	"github.com/arunima1319/handoff/internal/auth"
 	"github.com/arunima1319/handoff/internal/database"
 	"github.com/google/uuid"
 )
@@ -28,10 +30,17 @@ type createTaskRequest struct {
 
 func (cfg *apiConfig) handlerGetUnblockedUserTasks(w http.ResponseWriter, r *http.Request) {
 
-	userID, err := uuid.Parse(r.PathValue("userID"))
+	accessToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not parse user ID")
+		log.Printf("Could not get access token: %s", err)
+		respondWithError(w, http.StatusUnauthorized, "missing authentication credentials")
 		return
+	}
+
+	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
+	if err != nil {
+		log.Printf("Could not validate access token: %s", err)
+		respondWithError(w, http.StatusUnauthorized, "invalid authentication credentials")
 	}
 
 	dbTasks, err := cfg.dbQueries.GetUnblockedUserTasks(r.Context(), userID)
