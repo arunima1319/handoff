@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/arunima1319/handoff/internal/database"
@@ -77,7 +78,16 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 
 	visitedIDs := make(map[uuid.UUID]struct{})
 
-	cfg.checkForCycle(r, visitedIDs, taskID, req.DependencyID)
+	cycle, err := cfg.checkForCycle(r, visitedIDs, taskID, req.DependencyID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "could not check for cycle")
+		return
+	}
+	if cycle {
+		log.Printf("cycle detected")
+		respondWithError(w, http.StatusConflict, "leading to cylical dependency")
+		return
+	}
 
 	// Creating Task Dependency in Database
 	err = cfg.dbQueries.CreateTaskDependency(

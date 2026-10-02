@@ -1,7 +1,9 @@
+
 document.getElementById('login-form').addEventListener('submit', async (event) => {
     event.preventDefault();
     await login();
 });
+
 
 document.getElementById('signup-form').addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -58,6 +60,7 @@ async function login() {
         });
 
         const data = await res.json();
+
         if (!res.ok) {
             throw new Error(`Failed to Login: ${data.error}`)
         }
@@ -65,14 +68,46 @@ async function login() {
         if (data.access_token) {
             console.log("something happened")
             accessToken = data.access_token;
-            let userName = data.user_details.display_name;
             document.getElementById('auth-section').style.display = 'none';
             document.getElementById('user-page').style.display = 'block';
-            document.getElementById('welcome-message').textContent = `Welcome ${userName}`;
-
+            await renderUserPage(data)
         }
     } catch (error) {
         alert(`Error : ${error.message}`)
     }
+
+}
+
+async function renderUserPage(user) {
+    let username = user.user_details.display_name;
+    document.getElementById('welcome-message').textContent = `Welcome ${username}`;
+
+    try {
+        const res = await fetch('/api/users/me/tasks', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${user.access_token}`,
+            },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(`Failed to get tasks: ${data.error}`)
+        } else {
+            taskList = document.createElement('ul');
+            document.getElementById('user-page').appendChild(taskList);
+            for (let i = 0; i < data.length; i++) {
+                task = document.createElement('li');
+                task.textContent = data[i].description;
+                taskList.appendChild(task);
+            };
+
+        }
+    } catch (error) {
+        alert(`Error: ${error.message}`)
+    }
+
 
 }
