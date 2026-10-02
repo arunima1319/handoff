@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/arunima1319/handoff/internal/auth"
 	"github.com/arunima1319/handoff/internal/database"
 	"github.com/google/uuid"
 )
@@ -30,17 +29,10 @@ type createTaskRequest struct {
 
 func (cfg *apiConfig) handlerGetUnblockedUserTasks(w http.ResponseWriter, r *http.Request) {
 
-	accessToken, err := auth.GetBearerToken(r.Header)
+	userID, code, errorMsg, err := cfg.authenticateRequest(r)
 	if err != nil {
-		log.Printf("Could not get access token: %s", err)
-		respondWithError(w, http.StatusUnauthorized, "missing authentication credentials")
-		return
-	}
-
-	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
-	if err != nil {
-		log.Printf("Could not validate access token: %s", err)
-		respondWithError(w, http.StatusUnauthorized, "invalid authentication credentials")
+		log.Printf("could not authenticate request")
+		respondWithError(w, code, errorMsg)
 	}
 
 	dbTasks, err := cfg.dbQueries.GetUnblockedUserTasks(r.Context(), userID)
