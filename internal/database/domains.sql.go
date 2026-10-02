@@ -51,3 +51,22 @@ func (q *Queries) DeleteAllDomains(ctx context.Context) error {
 	_, err := q.db.ExecContext(ctx, deleteAllDomains)
 	return err
 }
+
+const getDomainByID = `-- name: GetDomainByID :one
+
+SELECT id, created_at, updated_at, owner, name FROM domains 
+WHERE id = $1
+`
+
+func (q *Queries) GetDomainByID(ctx context.Context, id uuid.UUID) (Domain, error) {
+	row := q.db.QueryRowContext(ctx, getDomainByID, id)
+	var i Domain
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Owner,
+		&i.Name,
+	)
+	return i, err
+}

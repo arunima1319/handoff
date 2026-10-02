@@ -13,3 +13,8 @@ RETURNING *;
 -- name: DeleteAllDomains :exec
 
 DELETE FROM domains; 
+
+-- name: GetDomainByID :one
+
+SELECT * FROM domains 
+WHERE id = $1; 

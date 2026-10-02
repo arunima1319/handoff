@@ -53,7 +53,7 @@ func main() {
 	mux.HandleFunc("POST /api/domains", apiCfg.handlerCreateDomain)
 	mux.HandleFunc("POST /api/domains/{domainID}/users", apiCfg.handlerAddUserToDomain)
 	//have to change this url path to "POST /api/domains/{domainID}/tasks"
-	mux.HandleFunc("POST /api/tasks", apiCfg.handlerCreateTask)
+	mux.HandleFunc("POST /api/domains/{domainID}/tasks", apiCfg.handlerCreateTask)
 	mux.HandleFunc("POST /api/tasks/{taskID}/dependencies", apiCfg.handlerCreateTaskDependency)
 	mux.HandleFunc("GET /api/domains/{domainID}/tasks", apiCfg.handlerGetTasksOfDomain)
 	mux.HandleFunc("GET /api/domains/{domainID}/users", apiCfg.handlerGetUsersOfDomain)
