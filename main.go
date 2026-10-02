@@ -15,6 +15,7 @@ type apiConfig struct {
 	dbQueries *database.Queries
 	db        *sql.DB
 	jwtSecret string
+	platform  string
 }
 
 func main() {
@@ -32,6 +33,7 @@ func main() {
 	if jwtKey == "" {
 		log.Fatal("SECRET is not set")
 	}
+	platform := os.Getenv("PLATFORM")
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
@@ -43,6 +45,7 @@ func main() {
 	apiCfg.db = db
 	apiCfg.dbQueries = database.New(db)
 	apiCfg.jwtSecret = jwtKey
+	apiCfg.platform = platform
 
 	mux := http.NewServeMux()
 	mux.Handle("GET /", http.FileServer(http.Dir("./app")))
@@ -56,7 +59,10 @@ func main() {
 	mux.HandleFunc("GET /api/domains/{domainID}/users", apiCfg.handlerGetUsersOfDomain)
 	mux.HandleFunc("GET /api/users/me/tasks", apiCfg.handlerGetUnblockedUserTasks)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
-	mux.HandleFunc("POST /admin/reset", apiCfg.handlerResetDatabase)
+
+	if apiCfg.platform == "dev" {
+		mux.HandleFunc("POST /admin/reset", apiCfg.handlerResetDatabase)
+	}
 
 	srv := &http.Server{
 		Addr:    ":" + port,
