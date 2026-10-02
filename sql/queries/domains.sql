@@ -18,3 +18,14 @@ DELETE FROM domains;
 
 SELECT * FROM domains 
 WHERE id = $1; 
+
+-- name: GetUserDomains :many
+
+WITH domain_ids AS (
+    SELECT domain_id FROM domains_users
+    WHERE user_id = $1
+)
+SELECT domains.* FROM domains JOIN domain_ids
+ON domains.id = domain_ids.domain_id ; 
+
+

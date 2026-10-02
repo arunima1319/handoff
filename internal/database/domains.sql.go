@@ -70,3 +70,42 @@ func (q *Queries) GetDomainByID(ctx context.Context, id uuid.UUID) (Domain, erro
 	)
 	return i, err
 }
+
+const getUserDomains = `-- name: GetUserDomains :many
+
+WITH domain_ids AS (
+    SELECT domain_id FROM domains_users
+    WHERE user_id = $1
+)
+SELECT domains.id, domains.created_at, domains.updated_at, domains.owner, domains.name FROM domains JOIN domain_ids
+ON domains.id = domain_ids.domain_id
+`
+
+func (q *Queries) GetUserDomains(ctx context.Context, userID uuid.UUID) ([]Domain, error) {
+	rows, err := q.db.QueryContext(ctx, getUserDomains, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Domain
+	for rows.Next() {
+		var i Domain
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Owner,
+			&i.Name,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

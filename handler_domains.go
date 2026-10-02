@@ -107,3 +107,34 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 
 	respondWithJSON(w, http.StatusOK, domain)
 }
+
+func (cfg *apiConfig) handlerGetUserDomains(w http.ResponseWriter, r *http.Request) {
+
+	userID, errorCode, errorMsg, err := cfg.authenticateRequest(r)
+	if err != nil {
+		respondWithError(w, errorCode, errorMsg)
+		return
+	}
+
+	dbDomains, err := cfg.dbQueries.GetUserDomains(r.Context(), userID)
+	if err != nil {
+		log.Printf("error in getting domains from database: %s", err)
+		respondWithError(w, http.StatusInternalServerError, msgServerError)
+		return
+	}
+
+	domains := []apiDomain{}
+	for _, dbDomain := range dbDomains {
+		domain := apiDomain{
+			ID:        dbDomain.ID,
+			CreatedAt: dbDomain.CreatedAt,
+			UpdatedAt: dbDomain.UpdatedAt,
+			Owner:     dbDomain.Owner,
+			Name:      dbDomain.Name,
+		}
+
+		domains = append(domains, domain)
+	}
+
+	respondWithJSON(w, http.StatusOK, domains)
+}

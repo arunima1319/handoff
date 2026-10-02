@@ -58,6 +58,7 @@ func main() {
 	mux.HandleFunc("GET /api/domains/{domainID}/tasks", apiCfg.handlerGetTasksOfDomain)
 	mux.HandleFunc("GET /api/domains/{domainID}/users", apiCfg.handlerGetUsersOfDomain)
 	mux.HandleFunc("GET /api/users/me/tasks", apiCfg.handlerGetUnblockedUserTasks)
+	mux.HandleFunc("GET /api/users/me/domains", apiCfg.handlerGetUserDomains)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
 
 	if apiCfg.platform == "dev" {
