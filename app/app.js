@@ -119,7 +119,7 @@ async function renderUserPage(user) {
         } else {
             domainList = document.createElement('ul');
             document.getElementById('domains').appendChild(domainList);
-            for (let i = 0; i < data.length; i++) {
+            for (let i = 0; i < dataDomain.length; i++) {
                 domain = document.createElement('li');
                 domain.textContent = dataDomain[i].name;
                 domainList.appendChild(domain);
@@ -128,7 +128,7 @@ async function renderUserPage(user) {
                 button.textContent = 'Enter domain';
                 button.addEventListener('click', async () => {
                     await renderDomainPage(dataDomain[i], user);
-                })
+                });
 
 
             };
@@ -148,4 +148,31 @@ async function renderDomainPage(domain, user) {
     document.getElementById('domain-page').style.display = 'block';
     document.getElementById('domain-heading').textContent = domain.name;
 
-}
+    try {
+        const res = await fetch(`/api/domains/${domain.id}/tasks`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${user.access_token}`
+            },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(`Failed to get domain tasks: ${data.error}`);
+        } else {
+            taskList = document.createElement('ul');
+            document.getElementById('domain-tasks').appendChild(taskList);
+            for (let i = 0; i < data.length; i++) {
+                task = document.createElement('li');
+                task.textContent = data[i].description;
+
+                taskList.appendChild(task);
+            };
+        };
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    };
+
+} 
