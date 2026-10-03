@@ -78,7 +78,7 @@ async function login() {
 }
 
 async function renderUserPage(user) {
-    let username = user.user_details.display_name;
+    let username = user.display_name;
     document.getElementById('welcome-message').textContent = `Welcome ${username}`;
 
     try {
@@ -170,6 +170,17 @@ async function renderDomainPage(domain, user) {
 
                 taskList.appendChild(task);
             };
+        };
+
+        if (domain.owner === user.id) {
+            buttonCreateTask = document.createElement('button');
+            domain = document.getElementById('domain-page');
+            domain.appendChild(buttonCreateTask);
+            buttonCreateTask.textContent = 'Create New Task'
+            buttonCreateTask.addEventListener('click', () => {
+
+            });
+
         };
     } catch (error) {
         alert(`Error: ${error.message}`);

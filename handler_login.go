@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/arunima1319/handoff/internal/auth"
+	"github.com/google/uuid"
 )
 
 type loginReq struct {
@@ -18,11 +19,10 @@ type loginReq struct {
 }
 
 type loginResponse struct {
-	AccessToken string `json:"access_token"`
-	UserDetails struct {
-		Email       string `json:"email"`
-		DisplayName string `json:"display_name"`
-	} `json:"user_details"`
+	AccessToken string    `json:"access_token"`
+	ID          uuid.UUID `json:"id"`
+	Email       string    `json:"email"`
+	DisplayName string    `json:"display_name"`
 }
 
 var errCouldNotLogin = errors.New("could not login")
@@ -84,8 +84,9 @@ func (cfg *apiConfig) helperLogin(ctx context.Context, email, password string) (
 	}
 
 	response.AccessToken = accessToken
-	response.UserDetails.DisplayName = dbUser.DisplayName
-	response.UserDetails.Email = dbUser.Email
+	response.ID = dbUser.ID
+	response.DisplayName = dbUser.DisplayName
+	response.Email = dbUser.Email
 
 	return response, http.StatusOK, "Logged in", nil
 
