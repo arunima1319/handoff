@@ -163,13 +163,15 @@ async function renderDomainPage(domain, user) {
         if (!res.ok) {
             throw new Error(`Failed to get domain tasks: ${data.error}`);
         } else {
-            taskList = document.createElement('ul');
-            document.getElementById('domain-tasks').appendChild(taskList);
+            const domainTaskList = document.createElement('ul');
+            domainTaskList.id = 'domain-task-list'
+
+            document.getElementById('domain-tasks').appendChild(domainTaskList);
             for (let i = 0; i < data.length; i++) {
                 const task = document.createElement('li');
                 task.textContent = data[i].description;
 
-                taskList.appendChild(task);
+                domainTaskList.appendChild(task);
             };
         };
 
@@ -181,7 +183,7 @@ async function renderDomainPage(domain, user) {
             domainPage.appendChild(buttonCreateTask);
             buttonCreateTask.textContent = 'Create New Task'
             buttonCreateTask.addEventListener('click', async () => {
-                await createTask(domain, user);
+                await showTaskForm(domain, user);
             });
 
         };
@@ -191,7 +193,7 @@ async function renderDomainPage(domain, user) {
 
 }
 
-async function createTask(domain, user) {
+async function showTaskForm(domain, user) {
 
     document.getElementById('create-task-button').style.display = 'none';
 
@@ -200,24 +202,69 @@ async function createTask(domain, user) {
     const taskForm = document.getElementById('task-form');
     taskForm.style.display = 'block';
 
+    const selectAssignee = document.getElementById('assignee');
 
-    taskForm.addEventListener('submit', (event) => {
+
+    assignees = await getDomainUsers(domain, user);
+
+    for (let i = 0; i < assignees.length; i++) {
+        const option = document.createElement('option');
+        selectAssignee.appendChild(option);
+        option.value = `${assignees[i].id}`;
+        option.textContent = `${assignees[i].display_name}`;
+    }
+
+
+    taskForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const assignee_id = selectAssignee.value;
+        const description = document.getElementById('description').value;
         document.getElementById('create-task-button').style.display = "block";
-    })
+        document.getElementById('task-form').style.display = 'none';
+        await createTask(domain, user, assignee_id, description);
+    });
 
-    /*
-let description = 
-try {
+};
+
+
+async function createTask(domain, user, assignee_id, description) {
+    console.log(`The description of the task is: ${description}`)
     const res = await fetch(`/api/domains/${domain.id}/tasks`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${user.access_token}`,
         },
-        body: stringify.JSON({})
-    );
+        body: JSON.stringify({ description, assignee_id }),
+    });
+
+    const task = await res.json();
+
+    if (!res.ok) {
+        throw new Error(`Failed to create task: ${task.error}`)
+    } else {
+        const newTask = document.createElement('li');
+        newTask.textContent = `${task.description}`;
+        newTask.id = `${task.id}`;
+
+        document.getElementById('domain-task-list').appendChild(newTask);
+
+    };
+};
+
+async function getDomainUsers(domain, user) {
 
 
-}
-*/
+    const res = await fetch(`/api/domains/${domain.id}/users`, {
+        method: 'GET',
+    });
+
+    const data = res.json()
+
+    if (!res.ok) {
+        throw new Error(`Could not get users of domain: ${data.error}`);
+    } else {
+        return data;
+    }
+
 }
