@@ -10,7 +10,6 @@ document.getElementById('signup-form').addEventListener('submit', async (event) 
     await signup();
 })
 
-
 let accessToken;
 
 async function signup() {
@@ -124,6 +123,14 @@ async function renderUserPage(user) {
                 domain = document.createElement('li');
                 domain.textContent = dataDomain[i].name;
                 domainList.appendChild(domain);
+                button = document.createElement('button')
+                domain.appendChild(button);
+                button.textContent = 'Enter domain';
+                button.addEventListener('click', async () => {
+                    await renderDomainPage(dataDomain[i], user);
+                })
+
+
             };
         };
 
@@ -132,5 +139,13 @@ async function renderUserPage(user) {
         alert(`Error: ${error.message}`)
     }
 
+
+}
+
+async function renderDomainPage(domain, user) {
+
+    document.getElementById('user-page').style.display = 'none';
+    document.getElementById('domain-page').style.display = 'block';
+    document.getElementById('domain-heading').textContent = domain.name;
 
 }
