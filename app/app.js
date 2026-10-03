@@ -120,10 +120,11 @@ async function renderUserPage(user) {
             domainList = document.createElement('ul');
             document.getElementById('domains').appendChild(domainList);
             for (let i = 0; i < dataDomain.length; i++) {
-                domain = document.createElement('li');
+                const domain = document.createElement('li');
                 domain.textContent = dataDomain[i].name;
                 domainList.appendChild(domain);
-                button = document.createElement('button')
+
+                const button = document.createElement('button')
                 domain.appendChild(button);
                 button.textContent = 'Enter domain';
                 button.addEventListener('click', async () => {
@@ -165,7 +166,7 @@ async function renderDomainPage(domain, user) {
             taskList = document.createElement('ul');
             document.getElementById('domain-tasks').appendChild(taskList);
             for (let i = 0; i < data.length; i++) {
-                task = document.createElement('li');
+                const task = document.createElement('li');
                 task.textContent = data[i].description;
 
                 taskList.appendChild(task);
@@ -173,12 +174,14 @@ async function renderDomainPage(domain, user) {
         };
 
         if (domain.owner === user.id) {
-            buttonCreateTask = document.createElement('button');
-            domain = document.getElementById('domain-page');
-            domain.appendChild(buttonCreateTask);
-            buttonCreateTask.textContent = 'Create New Task'
-            buttonCreateTask.addEventListener('click', () => {
+            const buttonCreateTask = document.createElement('button');
+            buttonCreateTask.id = 'create-task-button'
+            const domainPage = document.getElementById('domain-page');
 
+            domainPage.appendChild(buttonCreateTask);
+            buttonCreateTask.textContent = 'Create New Task'
+            buttonCreateTask.addEventListener('click', async () => {
+                await createTask(domain, user);
             });
 
         };
@@ -186,4 +189,35 @@ async function renderDomainPage(domain, user) {
         alert(`Error: ${error.message}`);
     };
 
-} 
+}
+
+async function createTask(domain, user) {
+
+    document.getElementById('create-task-button').style.display = 'none';
+
+    const domainPage = document.getElementById('domain-Page');
+
+    const taskForm = document.getElementById('task-form');
+    taskForm.style.display = 'block';
+
+
+    taskForm.addEventListener('submit', (event) => {
+        document.getElementById('create-task-button').style.display = "block";
+    })
+
+    /*
+let description = 
+try {
+    const res = await fetch(`/api/domains/${domain.id}/tasks`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.access_token}`,
+        },
+        body: stringify.JSON({})
+    );
+
+
+}
+*/
+}
