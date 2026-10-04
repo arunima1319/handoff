@@ -233,7 +233,7 @@ async function showTaskForm(domain, user) {
 
 
 async function createTask(domain, user, assignee_id, description) {
-    console.log(`The description of the task is: ${description}`)
+
     const res = await fetch(`/api/domains/${domain.id}/tasks`, {
         method: 'POST',
         headers: {
@@ -246,6 +246,10 @@ async function createTask(domain, user, assignee_id, description) {
     const task = await res.json();
 
     if (!res.ok) {
+        if (res.status === 401) {
+            alert("Your session has expired, please reload and login again.");
+            return;
+        }
         throw new Error(`Failed to create task: ${task.error}`)
     } else {
         const newTask = document.createElement('li');
