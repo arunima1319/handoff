@@ -81,66 +81,64 @@ async function renderUserPage(user) {
     let username = user.display_name;
     document.getElementById('welcome-message').textContent = `Welcome ${username}`;
 
-    try {
-        const res = await fetch('/api/users/me/tasks', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${user.access_token}`,
-            },
-        });
 
-        const data = await res.json();
+    const res = await fetch('/api/users/me/tasks', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.access_token}`,
+        },
+    });
 
-        if (!res.ok) {
-            throw new Error(`Failed to get tasks: ${data.error}`)
-        } else {
-            taskList = document.createElement('ul');
-            document.getElementById('actionable-tasks').appendChild(taskList);
-            for (let i = 0; i < data.length; i++) {
-                task = document.createElement('li');
-                task.textContent = data[i].description;
-                taskList.appendChild(task);
-            };
+    const data = await res.json();
+
+    if (!res.ok) {
+        throw new Error(`Failed to get tasks: ${data.error}`)
+    } else {
+        taskList = document.createElement('ul');
+        document.getElementById('actionable-tasks').appendChild(taskList);
+        for (let i = 0; i < data.length; i++) {
+            task = document.createElement('li');
+            task.textContent = data[i].description;
+            taskList.appendChild(task);
         };
+    };
 
-        const resDomain = await fetch('/api/users/me/domains', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${user.access_token}`,
-            },
-        });
+    const resDomain = await fetch('/api/users/me/domains', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.access_token}`,
+        },
+    });
 
-        const dataDomain = await resDomain.json();
+    const dataDomain = await resDomain.json();
 
-        if (!resDomain.ok) {
-            throw new Error(`Failed to get domains: ${dataDomain.error}`)
-        } else {
-            domainList = document.createElement('ul');
-            document.getElementById('domains').appendChild(domainList);
-            for (let i = 0; i < dataDomain.length; i++) {
-                const domain = document.createElement('li');
-                domain.textContent = dataDomain[i].name;
-                domainList.appendChild(domain);
+    if (!resDomain.ok) {
+        throw new Error(`Failed to get domains: ${dataDomain.error}`)
+    } else {
+        domainList = document.createElement('ul');
+        document.getElementById('domains').appendChild(domainList);
+        for (let i = 0; i < dataDomain.length; i++) {
+            const domain = document.createElement('li');
+            domain.textContent = dataDomain[i].name;
+            domainList.appendChild(domain);
 
-                const button = document.createElement('button')
-                domain.appendChild(button);
-                button.textContent = 'Enter domain';
-                button.addEventListener('click', async () => {
+            const button = document.createElement('button')
+            domain.appendChild(button);
+            button.textContent = 'Enter domain';
+            button.addEventListener('click', async () => {
+                try {
                     await renderDomainPage(dataDomain[i], user);
-                });
+                } catch (error) {
+                    alert(`Error: ${error.message}`)
+                }
+
+            });
 
 
-            };
         };
-
-
-    } catch (error) {
-        alert(`Error: ${error.message}`)
-    }
-
-
+    };
 }
 
 async function renderDomainPage(domain, user) {
@@ -149,48 +147,50 @@ async function renderDomainPage(domain, user) {
     document.getElementById('domain-page').style.display = 'block';
     document.getElementById('domain-heading').textContent = domain.name;
 
-    try {
-        const res = await fetch(`/api/domains/${domain.id}/tasks`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${user.access_token}`
-            },
-        });
 
-        const data = await res.json();
+    const res = await fetch(`/api/domains/${domain.id}/tasks`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.access_token}`
+        },
+    });
 
-        if (!res.ok) {
-            throw new Error(`Failed to get domain tasks: ${data.error}`);
-        } else {
-            const domainTaskList = document.createElement('ul');
-            domainTaskList.id = 'domain-task-list'
+    const data = await res.json();
 
-            document.getElementById('domain-tasks').appendChild(domainTaskList);
-            for (let i = 0; i < data.length; i++) {
-                const task = document.createElement('li');
-                task.textContent = data[i].description;
+    if (!res.ok) {
+        throw new Error(`Failed to get domain tasks: ${data.error}`);
+    } else {
+        const domainTaskList = document.createElement('ul');
+        domainTaskList.id = 'domain-task-list'
 
-                domainTaskList.appendChild(task);
-            };
+        document.getElementById('domain-tasks').appendChild(domainTaskList);
+        for (let i = 0; i < data.length; i++) {
+            const task = document.createElement('li');
+            task.textContent = data[i].description;
+
+            domainTaskList.appendChild(task);
         };
-
-        if (domain.owner === user.id) {
-            const buttonCreateTask = document.createElement('button');
-            buttonCreateTask.id = 'create-task-button'
-            const domainPage = document.getElementById('domain-page');
-
-            domainPage.appendChild(buttonCreateTask);
-            buttonCreateTask.textContent = 'Create New Task'
-            buttonCreateTask.addEventListener('click', async () => {
-                await showTaskForm(domain, user);
-            });
-
-        };
-    } catch (error) {
-        alert(`Error: ${error.message}`);
     };
 
+    if (domain.owner === user.id) {
+        const buttonCreateTask = document.createElement('button');
+        buttonCreateTask.id = 'create-task-button'
+        const domainPage = document.getElementById('domain-page');
+
+        domainPage.appendChild(buttonCreateTask);
+        buttonCreateTask.textContent = 'Create New Task'
+        buttonCreateTask.addEventListener('click', async () => {
+
+            try {
+                await showTaskForm(domain, user);
+            } catch (error) {
+                alert(`Error: ${error.message}`)
+            }
+
+        });
+
+    };
 }
 
 async function showTaskForm(domain, user) {
@@ -221,7 +221,12 @@ async function showTaskForm(domain, user) {
         const description = document.getElementById('description').value;
         document.getElementById('create-task-button').style.display = "block";
         document.getElementById('task-form').style.display = 'none';
-        await createTask(domain, user, assignee_id, description);
+        try {
+            await createTask(domain, user, assignee_id, description);
+        } catch (error) {
+            alert(`Error: ${error.message}`)
+        }
+
     });
 
 };
@@ -259,7 +264,7 @@ async function getDomainUsers(domain, user) {
         method: 'GET',
     });
 
-    const data = res.json()
+    const data = await res.json()
 
     if (!res.ok) {
         throw new Error(`Could not get users of domain: ${data.error}`);
