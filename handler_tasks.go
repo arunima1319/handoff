@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -32,16 +32,15 @@ type createTaskRequest struct {
 
 func (cfg *apiConfig) handlerGetUnblockedUserTasks(w http.ResponseWriter, r *http.Request) {
 
-	userID, code, errorMsg, err := cfg.authenticateRequest(r)
+	userID, err := cfg.authenticateRequest(r)
 	if err != nil {
-		respondWithError(w, code, errorMsg)
+		respondWithError(w, http.StatusUnauthorized, msgFailedAuthentication, fmt.Errorf("authenticate req: %w", err))
 		return
 	}
 
 	dbTasks, err := cfg.dbQueries.GetUnblockedUserTasks(r.Context(), userID)
 	if err != nil {
-		log.Printf("could not get tasks from database: %s", err)
-		respondWithError(w, http.StatusInternalServerError, "Could not get tasks")
+		respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("get unblocked user tasks db: %w", err))
 		return
 	}
 
@@ -67,7 +66,7 @@ func (cfg *apiConfig) handlerGetTasksOfDomain(w http.ResponseWriter, r *http.Req
 
 	domainID, err := uuid.Parse(r.PathValue("domainID"))
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not parse domain ID")
+		respondWithError(w, http.StatusBadRequest, "invalid domain id", fmt.Errorf("parse domain id: %w", err))
 		return
 	}
 
@@ -76,7 +75,7 @@ func (cfg *apiConfig) handlerGetTasksOfDomain(w http.ResponseWriter, r *http.Req
 		domainID,
 	)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not get tasks from domain")
+		respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("get tasks from domain db: %w", err))
 		return
 	}
 
@@ -103,16 +102,15 @@ func (cfg *apiConfig) handlerCreateTask(w http.ResponseWriter, r *http.Request) 
 
 	domainUUID, err := uuid.Parse(r.PathValue("domainID"))
 	if err != nil {
-		log.Printf("could not parse domain ID from path: %s", err)
-		respondWithError(w, http.StatusInternalServerError, "could not parse domain ID")
+		respondWithError(w, http.StatusBadRequest, "invalid domain ID", fmt.Errorf("parse domain id: %w", err))
 		return
 	}
 
 	//authenticating user
 
-	userID, errorCode, errorMsg, err := cfg.authenticateRequest(r)
+	userID, err := cfg.authenticateRequest(r)
 	if err != nil {
-		respondWithError(w, errorCode, errorMsg)
+		respondWithError(w, http.StatusUnauthorized, msgFailedAuthentication, fmt.Errorf("authenticate req: %w", err))
 		return
 	}
 
@@ -121,14 +119,13 @@ func (cfg *apiConfig) handlerCreateTask(w http.ResponseWriter, r *http.Request) 
 	dec := json.NewDecoder(r.Body)
 	err = dec.Decode(&req)
 	if err != nil {
-		statusCode, msg := reqJSONError(err)
-		respondWithError(w, statusCode, msg)
+		respondWithError(w, http.StatusBadRequest, msgInvalidRequestBody, fmt.Errorf("decode req body: %w", err))
 		return
 	}
 
 	task, errorCode, errorMsg, err := cfg.helperCreateTask(r.Context(), userID, domainUUID, req.AssigneeID, req.Description)
 	if err != nil {
-		respondWithError(w, errorCode, errorMsg)
+		respondWithError(w, errorCode, errorMsg, fmt.Errorf("create task: %w", err))
 		return
 	}
 
@@ -141,17 +138,17 @@ func (cfg *apiConfig) helperCreateTask(ctx context.Context, userID, domainID, as
 
 	dbDomain, err := cfg.dbQueries.GetDomainByID(ctx, domainID)
 	if err != nil {
+		code := http.StatusInternalServerError
+		msg := msgServerError
 		if errors.Is(err, sql.ErrNoRows) {
-			log.Printf("domain does not exist: %s", err)
-			return apiTask{}, http.StatusNotFound, "invalid domain", err
+			code = http.StatusNotFound
+			msg = "invalid domain ID"
 		}
-		log.Printf("unknown error in getting domain: %s", err)
-		return apiTask{}, http.StatusInternalServerError, msgServerError, err
+		return apiTask{}, code, msg, fmt.Errorf("get domain by id from db: %w", err)
 	}
 
 	if dbDomain.Owner != userID {
-		log.Printf("user not authorized to create task in this domain")
-		return apiTask{}, http.StatusForbidden, "user forbidden to create task", err
+		return apiTask{}, http.StatusForbidden, msgForbiddenError, errors.New("user is not owner of this domain")
 	}
 
 	//creating task in database
@@ -164,12 +161,13 @@ func (cfg *apiConfig) helperCreateTask(ctx context.Context, userID, domainID, as
 			AssigneeID:  assigneeID,
 		})
 	if err != nil {
+		code := http.StatusInternalServerError
+		msg := msgServerError
 		if pqErr := pq.As(err, pqerror.ForeignKeyViolation); pqErr != nil {
-			log.Printf("Foreign key violation in task creation: %s", err)
-			return apiTask{}, http.StatusBadRequest, "invalid assignee", err
+			code = http.StatusBadRequest
+			msg = "invalid assignee"
 		}
-		log.Printf("unknown error in creating task in database: %s", err)
-		return apiTask{}, http.StatusInternalServerError, msgServerError, err
+		return apiTask{}, code, msg, fmt.Errorf("create task in db: %w", err)
 
 	}
 

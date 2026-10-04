@@ -1,14 +1,12 @@
 package main
 
-import (
-	"encoding/json"
-	"errors"
-	"log"
-	"net/http"
-)
-
 const msgServerError = "internal server error"
+const msgFailedAuthentication = "authentication failed"
+const msgLoginError = "invalid user email or password"
+const msgInvalidRequestBody = "invalid request body"
+const msgForbiddenError = "user forbidden from carrying out this action"
 
+/*
 func reqJSONError(err error) (code int, msg string) {
 	var syntaxError *json.SyntaxError
 	if errors.As(err, &syntaxError) {
@@ -25,3 +23,4 @@ func reqJSONError(err error) (code int, msg string) {
 	return http.StatusBadRequest, "Invalid request body"
 
 }
+*/

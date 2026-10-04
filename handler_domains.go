@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -34,8 +34,7 @@ func (cfg *apiConfig) domainOwnerTransaction(r *http.Request, domainData databas
 
 	tx, err := cfg.db.Begin()
 	if err != nil {
-		log.Printf("error in beginning domain owner transaction: %s", err)
-		return dbDomain, err
+		return dbDomain, fmt.Errorf("begin domain owner transaction: %w", err)
 	}
 
 	defer tx.Rollback()
@@ -43,8 +42,7 @@ func (cfg *apiConfig) domainOwnerTransaction(r *http.Request, domainData databas
 	qtx := cfg.dbQueries.WithTx(tx)
 	dbDomain, err = qtx.CreateDomain(r.Context(), domainData)
 	if err != nil {
-		log.Printf("error in creating domain in db as part of transaction: %s", err)
-		return dbDomain, err
+		return dbDomain, fmt.Errorf("create domain in db: %w", err)
 	}
 	err = qtx.AddUserToDomain(
 		r.Context(),
@@ -53,8 +51,7 @@ func (cfg *apiConfig) domainOwnerTransaction(r *http.Request, domainData databas
 			UserID:   dbDomain.Owner,
 		})
 	if err != nil {
-		log.Printf("error in adding user to domain in db as part of transaction: %s", err)
-		return dbDomain, err
+		return dbDomain, fmt.Errorf("add owner to domain in db: %w", err)
 	}
 
 	return dbDomain, tx.Commit()
@@ -64,9 +61,9 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 
 	//authenticating user
 
-	userID, errorCode, errorMsg, err := cfg.authenticateRequest(r)
+	userID, err := cfg.authenticateRequest(r)
 	if err != nil {
-		respondWithError(w, errorCode, errorMsg)
+		respondWithError(w, http.StatusUnauthorized, msgFailedAuthentication, fmt.Errorf("authenticate req: %w", err))
 		return
 	}
 
@@ -75,8 +72,7 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 	dec := json.NewDecoder(r.Body)
 	err = dec.Decode(&req)
 	if err != nil {
-		statusCode, msg := reqJSONError(err)
-		respondWithError(w, statusCode, msg)
+		respondWithError(w, http.StatusBadRequest, msgInvalidRequestBody, fmt.Errorf("deocde request body: %w", err))
 		return
 	}
 
@@ -90,8 +86,7 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 		},
 	)
 	if err != nil {
-		log.Printf("domain creation transaction failed: %s", err)
-		respondWithError(w, http.StatusInternalServerError, "could not create domain")
+		respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("domain owner transaction: %w", err))
 		return
 	}
 
@@ -110,16 +105,15 @@ func (cfg *apiConfig) handlerCreateDomain(w http.ResponseWriter, r *http.Request
 
 func (cfg *apiConfig) handlerGetUserDomains(w http.ResponseWriter, r *http.Request) {
 
-	userID, errorCode, errorMsg, err := cfg.authenticateRequest(r)
+	userID, err := cfg.authenticateRequest(r)
 	if err != nil {
-		respondWithError(w, errorCode, errorMsg)
+		respondWithError(w, http.StatusUnauthorized, msgFailedAuthentication, fmt.Errorf("authenticate req: %w", err))
 		return
 	}
 
 	dbDomains, err := cfg.dbQueries.GetUserDomains(r.Context(), userID)
 	if err != nil {
-		log.Printf("error in getting domains from database: %s", err)
-		respondWithError(w, http.StatusInternalServerError, msgServerError)
+		respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("get domains of user from db: %w", err))
 		return
 	}
 

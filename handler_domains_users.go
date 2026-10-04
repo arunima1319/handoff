@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/arunima1319/handoff/internal/database"
@@ -23,16 +24,16 @@ func (cfg *apiConfig) handlerAddUserToDomain(w http.ResponseWriter, r *http.Requ
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&req)
 	if err != nil {
-		statusCode, msg := reqJSONError(err)
-		respondWithError(w, statusCode, msg)
+		respondWithError(w, http.StatusBadRequest, msgInvalidRequestBody, fmt.Errorf("decode request body: %w", err))
 		return
 	}
 
 	domainID, err := uuid.Parse(r.PathValue("domainID"))
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not parse domain ID")
+		respondWithError(w, http.StatusBadRequest, "invalid domain ID", fmt.Errorf("parse domain id: %w", err))
 		return
 	}
+
 	err = cfg.dbQueries.AddUserToDomain(
 		r.Context(),
 		database.AddUserToDomainParams{
@@ -41,7 +42,7 @@ func (cfg *apiConfig) handlerAddUserToDomain(w http.ResponseWriter, r *http.Requ
 		},
 	)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not create joining row in database")
+		respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("add user to domain in database: %w", err))
 		return
 	}
 

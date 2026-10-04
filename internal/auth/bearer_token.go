@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -11,7 +10,6 @@ func GetBearerToken(headers http.Header) (string, error) {
 
 	authString, ok := headers["Authorization"]
 	if !ok {
-		log.Printf("No authorization header found")
 		return "", errors.New("No authorization header found")
 	}
 	credentials := strings.Split(authString[0], " ")

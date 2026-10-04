@@ -23,7 +23,9 @@ func respondWithJSON(w http.ResponseWriter, code int, payload any) {
 
 }
 
-func respondWithError(w http.ResponseWriter, code int, msg string) {
+func respondWithError(w http.ResponseWriter, code int, msg string, err error) {
+
+	log.Printf("Error: %v", err)
 
 	type errorResponse struct {
 		Error string `json:"error"`

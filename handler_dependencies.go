@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 	"net/http"
 
 	"github.com/arunima1319/handoff/internal/database"
@@ -26,51 +26,54 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&req)
 	if err != nil {
-		statusCode, msg := reqJSONError(err)
-		respondWithError(w, statusCode, msg)
+		respondWithError(w, http.StatusBadRequest, msgInvalidRequestBody, fmt.Errorf("decode request body: %w", err))
 		return
 	}
 
 	taskID, err := uuid.Parse(r.PathValue("taskID"))
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Could not parse Task ID")
+		respondWithError(w, http.StatusBadRequest, "invalid task ID", fmt.Errorf("parse task ID: %w", err))
 		return
 	}
 
 	if taskID == req.DependencyID {
-		respondWithError(w, http.StatusBadRequest, "Task cannot be dependent on itself")
+		respondWithError(w, http.StatusBadRequest, "task cannot be dependent on itself", errors.New("task id identical to dependency id"))
 		return
 	}
 
 	dbDependency, err := cfg.dbQueries.GetTaskByID(r.Context(), req.DependencyID)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
+		msg := msgServerError
 		if errors.Is(err, sql.ErrNoRows) {
 			statusCode = http.StatusNotFound
+			msg = "dependency task does not exist"
 		}
-		respondWithError(w, statusCode, "Could not get dependency from database")
+		respondWithError(w, statusCode, msg, fmt.Errorf("get dependency task by id from db: %w", err))
 		return
 	}
 	if dbDependency.CompletedAt.Valid {
-		respondWithError(w, http.StatusBadRequest, "Cannot make a task dependent on a completed task")
+		respondWithError(w, http.StatusBadRequest, "cannot make a task dependent on a completed task", errors.New("task dependent on completed task"))
 		return
 	}
 
 	dbTask, err := cfg.dbQueries.GetTaskByID(r.Context(), taskID)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
+		msg := msgServerError
 		if errors.Is(err, sql.ErrNoRows) {
 			statusCode = http.StatusNotFound
+			msg = "task does not exist"
 		}
-		respondWithError(w, statusCode, "Could not get task from database")
+		respondWithError(w, statusCode, msg, fmt.Errorf("get task by id from db: %w", err))
 		return
 	}
 	if dbTask.CompletedAt.Valid {
-		respondWithError(w, http.StatusBadRequest, "Cannot add a dependency to a completed task")
+		respondWithError(w, http.StatusBadRequest, "cannot add a dependency to a completed task", errors.New("task already completed"))
 		return
 	}
 	if dbDependency.DomainID != dbTask.DomainID {
-		respondWithError(w, http.StatusBadRequest, "A task and its dependency must be in same domain")
+		respondWithError(w, http.StatusBadRequest, "a task and its dependency must be in same domain", errors.New("task and dependency not in same domain"))
 		return
 	}
 
@@ -80,12 +83,11 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 
 	cycle, err := cfg.checkForCycle(r, visitedIDs, taskID, req.DependencyID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "could not check for cycle")
+		respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("check for cycle: %w", err))
 		return
 	}
 	if cycle {
-		log.Printf("cycle detected")
-		respondWithError(w, http.StatusConflict, "leading to cylical dependency")
+		respondWithError(w, http.StatusConflict, "leading to cylical dependency", errors.New("cycle detected!"))
 		return
 	}
 
@@ -97,7 +99,7 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 			DependencyID: req.DependencyID,
 		})
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not add dependency in database")
+		respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("create task-dependency row in db: %w", err))
 		return
 	}
 

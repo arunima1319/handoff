@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 	"net/http"
 
 	"github.com/arunima1319/handoff/internal/auth"
@@ -24,10 +24,6 @@ type loginResponse struct {
 	DisplayName string    `json:"display_name"`
 }
 
-var errCouldNotLogin = errors.New("could not login")
-
-const msgLoginError = "invalid user email or password"
-
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 
 	req := loginReq{}
@@ -35,14 +31,13 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&req)
 	if err != nil {
-		code, msg := reqJSONError(err)
-		respondWithError(w, code, msg)
+		respondWithError(w, http.StatusBadRequest, msgInvalidRequestBody, fmt.Errorf("decode request body: %w", err))
 		return
 	}
 
 	payload, code, msg, err := cfg.helperLogin(r.Context(), req.Email, req.Password)
 	if err != nil {
-		respondWithError(w, code, msg)
+		respondWithError(w, code, msg, err)
 		return
 	}
 
@@ -56,25 +51,22 @@ func (cfg *apiConfig) helperLogin(ctx context.Context, email, password string) (
 	dbUser, err := cfg.dbQueries.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			log.Printf("Email not found in database: %v", err)
+			return response, http.StatusUnauthorized, msgLoginError, fmt.Errorf("email does not exist in db: %w", err)
 		}
-		return response, http.StatusUnauthorized, msgLoginError, errCouldNotLogin
+		return response, http.StatusUnauthorized, msgLoginError, fmt.Errorf("unknown error getting user by email: %w", err)
 	}
 
 	match, err := auth.CheckPasswordHash(dbUser.HashedPassword, password)
 	if err != nil {
-		log.Printf("Error: %v", err)
-		return response, http.StatusUnauthorized, msgLoginError, errCouldNotLogin
+		return response, http.StatusUnauthorized, msgLoginError, fmt.Errorf("password hash: %w", err)
 	}
 	if match != true {
-		log.Printf("Password does not match")
-		return response, http.StatusUnauthorized, msgLoginError, errCouldNotLogin
+		return response, http.StatusUnauthorized, msgLoginError, errors.New("password does not match")
 	}
 
 	accessToken, err := auth.MakeJWT(dbUser.ID, cfg.jwtSecret, auth.JWTExpiration)
 	if err != nil {
-		log.Printf("could not create access token: %s", err)
-		return response, http.StatusInternalServerError, msgServerError, errCouldNotLogin
+		return response, http.StatusInternalServerError, msgServerError, fmt.Errorf("creating jwt: %w", err)
 	}
 
 	response.AccessToken = accessToken

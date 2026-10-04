@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -33,13 +33,13 @@ func (cfg *apiConfig) handlerGetUsersOfDomain(w http.ResponseWriter, r *http.Req
 
 	domainID, err := uuid.Parse(r.PathValue("domainID"))
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not parse domain ID")
+		respondWithError(w, http.StatusBadRequest, "invalid domain ID", fmt.Errorf("parse domain id: %w", err))
 		return
 	}
 
 	dbUsers, err := cfg.dbQueries.GetUsersOfDomain(r.Context(), domainID)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not get users from database")
+		respondWithError(w, http.StatusInternalServerError, "Could not get users from database", fmt.Errorf("get domain users: %w", err))
 		return
 	}
 
@@ -67,14 +67,13 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&req)
 	if err != nil {
-		statusCode, msg := reqJSONError(err)
-		respondWithError(w, statusCode, msg)
+		respondWithError(w, http.StatusBadRequest, msgInvalidRequestBody, fmt.Errorf("decode request body: %w", err))
 		return
 	}
 
 	user, code, msg, err := cfg.helperCreateUser(r.Context(), req)
 	if err != nil {
-		respondWithError(w, code, msg)
+		respondWithError(w, code, msg, fmt.Errorf("create user: %w", err))
 		return
 	}
 	respondWithJSON(w, http.StatusOK, user)
@@ -85,8 +84,7 @@ func (cfg *apiConfig) helperCreateUser(ctx context.Context, req createUserReques
 	//Hashing password
 	hashedPassword, err := auth.HashPassword(req.Password)
 	if err != nil {
-		log.Printf("Could not hash password: %s", err)
-		return apiUser{}, http.StatusInternalServerError, msgServerError, err
+		return apiUser{}, http.StatusInternalServerError, msgServerError, fmt.Errorf("hash password: %w", err)
 	}
 
 	// Creating the user in the database
@@ -98,21 +96,22 @@ func (cfg *apiConfig) helperCreateUser(ctx context.Context, req createUserReques
 			HashedPassword: hashedPassword,
 		})
 	if err != nil {
+		code := http.StatusInternalServerError
+		msg := msgServerError
+
 		if pqErr := pq.As(err, pqerror.UniqueViolation); pqErr != nil {
-			log.Printf("email %s already exists", req.Email)
-			return apiUser{}, http.StatusConflict, "email already exists", err
+			code = http.StatusConflict
+			msg = fmt.Sprintf("email %s already exists", req.Email)
 		}
 
-		log.Printf("unknown error in creating user in database: %s", err)
-		return apiUser{}, http.StatusInternalServerError, msgServerError, err
+		return apiUser{}, code, msg, fmt.Errorf("create user in database: %w", err)
 	}
 
 	//Creating access token
 
 	token, err := auth.MakeJWT(dbUser.ID, cfg.jwtSecret, auth.JWTExpiration)
 	if err != nil {
-		log.Printf("could not make JWT: %s", err)
-		return apiUser{}, http.StatusInternalServerError, msgServerError, err
+		return apiUser{}, http.StatusInternalServerError, msgServerError, fmt.Errorf("make jwt: %w", err)
 	}
 
 	//Writing the response
