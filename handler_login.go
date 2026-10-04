@@ -7,7 +7,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/arunima1319/handoff/internal/auth"
 	"github.com/google/uuid"
@@ -72,12 +71,7 @@ func (cfg *apiConfig) helperLogin(ctx context.Context, email, password string) (
 		return response, http.StatusUnauthorized, msgLoginError, errCouldNotLogin
 	}
 
-	expirationTime, err := time.ParseDuration("1h")
-	if err != nil {
-		log.Printf("could not parse expiration time: %s", err)
-		return response, http.StatusInternalServerError, msgServerError, errCouldNotLogin
-	}
-	accessToken, err := auth.MakeJWT(dbUser.ID, cfg.jwtSecret, expirationTime)
+	accessToken, err := auth.MakeJWT(dbUser.ID, cfg.jwtSecret, auth.JWTExpiration)
 	if err != nil {
 		log.Printf("could not create access token: %s", err)
 		return response, http.StatusInternalServerError, msgServerError, errCouldNotLogin

@@ -109,12 +109,7 @@ func (cfg *apiConfig) helperCreateUser(ctx context.Context, req createUserReques
 
 	//Creating access token
 
-	expiration, err := time.ParseDuration("1h")
-	if err != nil {
-		log.Printf("could not parse expiration time: %s", err)
-		return apiUser{}, http.StatusInternalServerError, msgServerError, err
-	}
-	token, err := auth.MakeJWT(dbUser.ID, cfg.jwtSecret, expiration)
+	token, err := auth.MakeJWT(dbUser.ID, cfg.jwtSecret, auth.JWTExpiration)
 	if err != nil {
 		log.Printf("could not make JWT: %s", err)
 		return apiUser{}, http.StatusInternalServerError, msgServerError, err
