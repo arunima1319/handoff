@@ -174,16 +174,35 @@ async function renderDomainPage(domain, user) {
     };
 
     if (domain.owner === user.id) {
-        const buttonCreateTask = document.createElement('button');
-        buttonCreateTask.id = 'create-task-button'
+
         const domainPage = document.getElementById('domain-page');
 
-        domainPage.appendChild(buttonCreateTask);
+        const buttonCreateTask = document.createElement('button');
+        buttonCreateTask.id = 'create-task-button';
         buttonCreateTask.textContent = 'Create New Task'
+
+        domainPage.appendChild(buttonCreateTask);
+
         buttonCreateTask.addEventListener('click', async () => {
 
             try {
                 await showTaskForm(domain, user);
+            } catch (error) {
+                alert(`Error: ${error.message}`)
+            }
+
+        });
+
+        const buttonAddUser = document.createElement('button');
+        buttonAddUser.id = 'add-user-button';
+        buttonAddUser.textContent = 'Add User to Domain'
+
+        domainPage.appendChild(buttonAddUser);
+
+        buttonAddUser.addEventListener('click', async () => {
+
+            try {
+                alert(`No not yet`)
             } catch (error) {
                 alert(`Error: ${error.message}`)
             }
