@@ -72,8 +72,6 @@ Database data is preserved between restarts using a Docker volume.
 
 - JWT-based authentication and protected endpoints
 
-- SQL queries generated using sqlc
-
 - Database migrations managed with Goose
 
 - Dependency cycle detection using depth-first search
