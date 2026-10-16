@@ -118,7 +118,14 @@ async function renderUserPage(user) {
         throw new Error(`Failed to get domains: ${dataDomain.error}`)
     } else {
         domainList = document.createElement('ul');
-        document.getElementById('domains').appendChild(domainList);
+        domainsSection = document.getElementById('domains')
+        domainsSection.appendChild(domainList);
+
+        const createDomainButton = document.createElement('button');
+        createDomainButton.id = 'create-new-domain'
+        createDomainButton.textContent = 'Create new Domain';
+        domainsSection.appendChild(createDomainButton);
+
         for (let i = 0; i < dataDomain.length; i++) {
             const domain = document.createElement('li');
             domain.textContent = dataDomain[i].name;
@@ -132,12 +139,74 @@ async function renderUserPage(user) {
                     await renderDomainPage(dataDomain[i], user);
                 } catch (error) {
                     alert(`Error: ${error.message}`)
-                }
+                };
 
             });
 
-
         };
+
+        createDomainButton.addEventListener('click', async () => {
+
+            try {
+                createDomainButton.style.display = 'none';
+                const domainName = document.createElement('input')
+                const create = document.createElement('button');
+                create.id = 'create-domain';
+                create.textContent = "Create";
+                domainsSection.appendChild(domainName)
+                domainsSection.appendChild(create)
+
+                create.addEventListener('click', async () => {
+
+                    try {
+                        createDomainButton.style.display = 'block';
+                        domainName.style.display = 'none';
+                        create.style.display = 'none';
+                        const name = domainName.value;
+                        const res = await fetch('/api/domains', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${user.access_token}`,
+                            },
+                            body: JSON.stringify({ name }),
+                        });
+
+
+                        const data = await res.json();
+                        if (!res.ok) {
+                            throw new Error(`Failed to create new domain: ${data.error}`);
+                        }
+
+                        const domainBullet = document.createElement('li');
+                        domainBullet.textContent = name;
+                        domainList.appendChild(domainBullet)
+
+                        const button = document.createElement('button')
+                        domainBullet.appendChild(button);
+                        button.textContent = 'Enter domain';
+                        button.addEventListener('click', async () => {
+                            try {
+                                await renderDomainPage(data, user);
+                            } catch (error) {
+                                alert(`Error: ${error.message}`)
+                            };
+
+                        });
+
+
+                    } catch (error) {
+                        alert(`Error: ${error.message}`)
+                    }
+
+                });
+
+            } catch (error) {
+                alert(`Error: ${error.message}`)
+            };
+
+        });
+
     };
 }
 
