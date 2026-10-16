@@ -4,4 +4,4 @@ import (
 	"time"
 )
 
-const JWTExpiration = time.Minute
+const JWTExpiration = 15 * time.Minute
