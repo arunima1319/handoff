@@ -30,6 +30,10 @@ type createTaskRequest struct {
 	AssigneeID  uuid.UUID `json:"assignee_id"`
 }
 
+type updateTaskRequest struct {
+	Completed bool `json:"completed"`
+}
+
 func (cfg *apiConfig) handlerGetUnblockedUserTasks(w http.ResponseWriter, r *http.Request) {
 
 	userID, err := cfg.authenticateRequest(r)
@@ -182,4 +186,33 @@ func (cfg *apiConfig) helperCreateTask(ctx context.Context, userID, domainID, as
 	}
 
 	return task, 0, "", nil
+}
+
+func mapTask(dbTask database.Task) apiTask {
+
+	task := apiTask{
+		ID:          dbTask.ID,
+		CreatedAt:   dbTask.CreatedAt,
+		UpdatedAt:   dbTask.UpdatedAt,
+		Description: dbTask.Description,
+		DomainID:    dbTask.DomainID,
+		AssigneeID:  dbTask.AssigneeID,
+		CompletedAt: dbTask.CompletedAt,
+	}
+
+	return task
+
+}
+
+func mapTasks(dbTasks []database.Task) []apiTask {
+
+	tasks := []apiTask{}
+
+	for _, dbTask := range dbTasks {
+
+		task := mapTask(dbTask)
+		tasks = append(tasks, task)
+	}
+
+	return tasks
 }
