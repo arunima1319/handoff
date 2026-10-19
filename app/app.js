@@ -271,7 +271,32 @@ async function renderDomainPage(domain, user) {
         buttonAddUser.addEventListener('click', async () => {
 
             try {
-                alert(`No not yet`)
+                const userForm = document.getElementById('add-user-form');
+                userForm.style.display = 'block';
+                buttonAddUser.style.display = 'none';
+
+                userForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    userForm.style.display = 'none';
+                    const email = document.getElementById('member').value;
+                    const res = await fetch(`api/domains/${domain.id}/users`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${user.access_token}`,
+                        },
+                        body: JSON.stringify({ email }),
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(`Could not add user to domain: ${data.error}`)
+                    } else {
+                        alert(`${data.message}`)
+                    }
+
+                })
+
             } catch (error) {
                 alert(`Error: ${error.message}`)
             }

@@ -10,7 +10,7 @@ import (
 )
 
 type addUserToDomainRequest struct {
-	UserID uuid.UUID `json:"user_id"`
+	Email string `json:"email"`
 }
 
 type addUserToDomainResponse struct {
@@ -34,11 +34,16 @@ func (cfg *apiConfig) handlerAddUserToDomain(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	dbUser, err := cfg.dbQueries.GetUserByEmail(r.Context(), req.Email)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "could not add user", fmt.Errorf("get user from email: %w", err))
+	}
+
 	err = cfg.dbQueries.AddUserToDomain(
 		r.Context(),
 		database.AddUserToDomainParams{
 			DomainID: domainID,
-			UserID:   req.UserID,
+			UserID:   dbUser.ID,
 		},
 	)
 	if err != nil {
