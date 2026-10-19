@@ -38,18 +38,22 @@ func (cfg *apiConfig) handlerAddUserToDomain(w http.ResponseWriter, r *http.Requ
 	dbDomain, err := cfg.dbQueries.GetDomainByID(r.Context(), domainID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "could not get domain", fmt.Errorf("get db domain from id: %w", err))
+		return
 	}
 	userID, err := cfg.authenticateRequest(r)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, msgFailedAuthentication, fmt.Errorf("authenticate req: %w", err))
+		return
 	}
 	if userID != dbDomain.Owner {
 		respondWithError(w, http.StatusForbidden, msgForbiddenError, errors.New("non-owner attempt to add user to domain"))
+		return
 	}
 
 	dbUser, err := cfg.dbQueries.GetUserByEmail(r.Context(), req.Email)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("get user from email: %w", err))
+		return
 	}
 
 	err = cfg.dbQueries.AddUserToDomain(
