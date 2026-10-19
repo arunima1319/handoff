@@ -34,6 +34,62 @@ type updateTaskRequest struct {
 	Completed bool `json:"completed"`
 }
 
+func (cfg *apiConfig) handlerUpdateTask(w http.ResponseWriter, r *http.Request) {
+
+	userID, err := cfg.authenticateRequest(r)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, msgFailedAuthentication, fmt.Errorf("authenticate req: %w", err))
+		return
+	}
+
+	taskID, err := uuid.Parse(r.PathValue("taskID"))
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "invalid task id", fmt.Errorf("parse task ID: %w", err))
+		return
+	}
+
+	req := updateTaskRequest{}
+	dec := json.NewDecoder(r.Body)
+	err = dec.Decode(&req)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, msgInvalidRequestBody, fmt.Errorf("decode req body: %w", err))
+		return
+	}
+
+	if req.Completed == true {
+		dbTask, err := cfg.dbQueries.GetTaskByID(r.Context(), taskID)
+		if err != nil {
+			statusCode := http.StatusInternalServerError
+			msg := msgServerError
+			if errors.Is(err, sql.ErrNoRows) {
+				statusCode = http.StatusNotFound
+				msg = "invalid task"
+			}
+			respondWithError(w, statusCode, msg, fmt.Errorf("get db task from id: %w", err))
+			return
+		}
+
+		if dbTask.AssigneeID != userID {
+			respondWithError(w, http.StatusForbidden, msgForbiddenError, errors.New("attempt to check off task by non-assignee"))
+			return
+		}
+
+		if dbTask.CompletedAt.Valid == true {
+			respondWithJSON(w, http.StatusOK, mapTask(dbTask))
+			return
+		}
+
+		dbUpdatedTask, err := cfg.dbQueries.MarkTaskAsComplete(r.Context(), dbTask.ID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("update task in db: %w", err))
+			return
+		}
+
+		updatedTask := mapTask(dbUpdatedTask)
+		respondWithJSON(w, http.StatusOK, updatedTask)
+	}
+
+}
 func (cfg *apiConfig) handlerGetUnblockedUserTasks(w http.ResponseWriter, r *http.Request) {
 
 	userID, err := cfg.authenticateRequest(r)

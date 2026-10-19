@@ -36,3 +36,10 @@ AND tasks.assignee_id = $1;
 -- name: DeleteAllTasks :exec
 
 DELETE FROM tasks; 
+
+-- name: MarkTaskAsComplete :one
+
+UPDATE tasks 
+SET completed_at = NOW()
+WHERE id = $1
+RETURNING *; 

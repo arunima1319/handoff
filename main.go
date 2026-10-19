@@ -59,6 +59,7 @@ func main() {
 	mux.HandleFunc("GET /api/users/me/tasks", apiCfg.handlerGetUnblockedUserTasks)
 	mux.HandleFunc("GET /api/users/me/domains", apiCfg.handlerGetUserDomains)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
+	mux.HandleFunc("PATCH /api/tasks/{taskID}", apiCfg.handlerUpdateTask)
 
 	if apiCfg.platform == "dev" {
 		mux.HandleFunc("POST /admin/reset", apiCfg.handlerResetDatabase)

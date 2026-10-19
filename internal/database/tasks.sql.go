@@ -156,3 +156,26 @@ func (q *Queries) GetUnblockedUserTasks(ctx context.Context, assigneeID uuid.UUI
 	}
 	return items, nil
 }
+
+const markTaskAsComplete = `-- name: MarkTaskAsComplete :one
+
+UPDATE tasks 
+SET completed_at = NOW()
+WHERE id = $1
+RETURNING id, created_at, updated_at, description, domain_id, assignee_id, completed_at
+`
+
+func (q *Queries) MarkTaskAsComplete(ctx context.Context, id uuid.UUID) (Task, error) {
+	row := q.db.QueryRowContext(ctx, markTaskAsComplete, id)
+	var i Task
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Description,
+		&i.DomainID,
+		&i.AssigneeID,
+		&i.CompletedAt,
+	)
+	return i, err
+}
