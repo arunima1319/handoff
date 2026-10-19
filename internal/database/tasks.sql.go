@@ -123,6 +123,7 @@ WITH incomplete_dependencies AS (
 )
 SELECT tasks.id, tasks.created_at, tasks.updated_at, tasks.description, tasks.domain_id, tasks.assignee_id, tasks.completed_at FROM tasks
 WHERE tasks.id NOT IN (SELECT task_id FROM incomplete_dependencies)
+AND tasks.completed_at IS NULL
 AND tasks.assignee_id = $1
 `
 

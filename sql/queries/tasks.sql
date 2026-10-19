@@ -30,6 +30,7 @@ WITH incomplete_dependencies AS (
 )
 SELECT tasks.* FROM tasks
 WHERE tasks.id NOT IN (SELECT task_id FROM incomplete_dependencies)
+AND tasks.completed_at IS NULL
 AND tasks.assignee_id = $1; 
 
 
