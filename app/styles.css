@@ -10,3 +10,9 @@
     font-size: 0.5em;
     margin-left: 10px;
 }
+
+button {
+    padding: 5px;
+    background-color: #d8f2df;
+    font-weight: bold;
+}
