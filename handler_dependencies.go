@@ -21,10 +21,15 @@ type createDependencyResponse struct {
 
 func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http.Request) {
 
+	userID, err := cfg.authenticateRequest(r)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, msgFailedAuthentication, fmt.Errorf("authenticate req : %w", err))
+		return
+	}
 	req := createDependencyRequest{}
 
 	dec := json.NewDecoder(r.Body)
-	err := dec.Decode(&req)
+	err = dec.Decode(&req)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, msgInvalidRequestBody, fmt.Errorf("decode request body: %w", err))
 		return
@@ -74,6 +79,16 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 	}
 	if dbDependency.DomainID != dbTask.DomainID {
 		respondWithError(w, http.StatusBadRequest, "a task and its dependency must be in same domain", errors.New("task and dependency not in same domain"))
+		return
+	}
+
+	dbDomain, err := cfg.dbQueries.GetDomainByID(r.Context(), dbTask.DomainID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("get domain by id: %w", err))
+		return
+	}
+	if userID != dbDomain.Owner {
+		respondWithError(w, http.StatusForbidden, msgForbiddenError, errors.New("non-owner attempt to add dependency"))
 		return
 	}
 
