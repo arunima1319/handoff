@@ -8,6 +8,8 @@ import (
 
 	"github.com/arunima1319/handoff/internal/database"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
+	"github.com/lib/pq/pqerror"
 )
 
 type addUserToDomainRequest struct {
@@ -64,7 +66,14 @@ func (cfg *apiConfig) handlerAddUserToDomain(w http.ResponseWriter, r *http.Requ
 		},
 	)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("add user to domain in database: %w", err))
+		code := http.StatusInternalServerError
+		msg := msgServerError
+
+		if pqErr := pq.As(err, pqerror.UniqueViolation); pqErr != nil {
+			code = http.StatusConflict
+			msg = "user already present"
+		}
+		respondWithError(w, code, msg, fmt.Errorf("add user to domain in database: %w", err))
 		return
 	}
 
