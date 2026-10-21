@@ -233,7 +233,7 @@ async function renderDomainPage(domain, user) {
         if (domain.owner === user.id) {
             await renderTasksWithDependency(data, user);
         } else {
-            await renderTasks(data, user);
+            renderTasks(data, user);
         }
     };
 
@@ -310,7 +310,7 @@ async function renderDomainPage(domain, user) {
     };
 }
 
-async function renderTasks(tasks, user) {
+function renderTasks(tasks, user) {
     const domainTaskList = document.createElement('ul');
     domainTaskList.id = 'domain-task-list'
 
@@ -335,59 +335,78 @@ async function renderTasksWithDependency(tasks, user) {
 
         domainTaskList.appendChild(task);
 
-        const dependency = document.createElement('button');
-        dependency.textContent = 'Add Dependency'
-        task.appendChild(dependency)
+        if (!tasks[i].completed_at.Valid) {
+            const dependency = document.createElement('button');
+            dependency.textContent = 'Add Dependency';
+            task.appendChild(dependency);
 
-        dependency.addEventListener('click', async () => {
+            dependency.addEventListener('click', async () => {
 
-            try {
-                dependency.style.display = 'none';
-                const dependencyForm = document.createElement('form');
-                task.appendChild(dependencyForm);
-                select = document.createElement('select');
-                select.id = 'dependency';
-                label = document.createElement('label');
-                label.for = 'dependency';
-                dependencyForm.appendChild(label);
-                dependencyForm.appendChild(select);
+                try {
+                    dependency.style.display = 'none';
+                    const dependencyForm = document.createElement('form');
+                    task.appendChild(dependencyForm);
+                    select = document.createElement('select');
+                    select.id = 'dependency';
+                    label = document.createElement('label');
+                    label.for = 'dependency';
+                    dependencyForm.appendChild(label);
+                    dependencyForm.appendChild(select);
 
-                for (let j = 0; j < tasks.length; j++) {
-                    option = document.createElement('option');
-                    option.value = tasks[j].id;
-                    option.textContent = tasks[j].description;
-                    select.appendChild(option)
+                    for (let j = 0; j < tasks.length; j++) {
+                        option = document.createElement('option');
+                        option.value = tasks[j].id;
+                        option.textContent = tasks[j].description;
+                        select.appendChild(option)
+                    };
+
+                    const submitDependencyForm = document.createElement('button');
+                    submitDependencyForm.textContent = 'Add';
+                    dependencyForm.appendChild(submitDependencyForm);
+
+                    dependencyForm.addEventListener('submit', async (event) => {
+                        try {
+                            event.preventDefault();
+                            const dependencyID = select.value;
+                            dependency.style.display = '';
+                            dependencyForm.style.display = 'none';
+
+                            await addDependencyRequest(tasks[i].id, dependencyID, user);
+                        } catch (error) {
+                            alert(`Error: ${error.message}`)
+                        }
+
+
+                    });
+                } catch (error) {
+                    alert(`Error: ${error.message}`)
                 };
-
-                const submitDependencyForm = document.createElement('button');
-                submitDependencyForm.textContent = 'Add';
-                dependencyForm.appendChild(submitDependencyForm);
-
-                dependencyForm.addEventListener('submit', async (event) => {
-                    try {
-                        dependency.style.display = '';
-                        dependencyForm.style.display = 'none';
-                        event.preventDefault();
-                        alert('not yet')
-
-                        //await addDependencyRequest(tasks[i], tasks[j], user);
-                    } catch (error) {
-                        alert(`Error: ${error.message}`)
-                    }
-
-
-                });
-            } catch (error) {
-                alert(`Error: ${error.message}`)
-            }
-
-        });
+            });
+        };
 
     };
 
 }
 
+async function addDependencyRequest(taskID, dependencyID, user) {
 
+    const res = await fetch(`/api/tasks/${taskID}/dependencies`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${user.access_token}`,
+        },
+        body: JSON.stringify({ dependency_id: dependencyID }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        throw new Error(`Could not add dependency: ${data.error}`)
+    } else {
+        alert(`${data.message}`)
+    }
+
+}
 
 async function showTaskForm(domain, user) {
 
