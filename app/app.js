@@ -280,6 +280,8 @@ async function renderDomainPage(domain, user) {
                     try {
                         event.preventDefault();
                         userForm.style.display = 'none';
+                        buttonAddUser.style.display = 'block';
+
                         const email = document.getElementById('member').value;
                         const res = await fetch(`api/domains/${domain.id}/users`, {
                             method: 'POST',
