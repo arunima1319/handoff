@@ -230,16 +230,11 @@ async function renderDomainPage(domain, user) {
     if (!res.ok) {
         throw new Error(`Failed to get domain tasks: ${data.error}`);
     } else {
-        const domainTaskList = document.createElement('ul');
-        domainTaskList.id = 'domain-task-list'
-
-        document.getElementById('domain-tasks').appendChild(domainTaskList);
-        for (let i = 0; i < data.length; i++) {
-            const task = document.createElement('li');
-            task.textContent = data[i].description;
-
-            domainTaskList.appendChild(task);
-        };
+        if (domain.owner === user.id) {
+            await renderTasksWithDependency(data, user);
+        } else {
+            await renderTasks(data, user);
+        }
     };
 
     if (domain.owner === user.id) {
@@ -314,6 +309,85 @@ async function renderDomainPage(domain, user) {
 
     };
 }
+
+async function renderTasks(tasks, user) {
+    const domainTaskList = document.createElement('ul');
+    domainTaskList.id = 'domain-task-list'
+
+    document.getElementById('domain-tasks').appendChild(domainTaskList);
+    for (let i = 0; i < tasks.length; i++) {
+        const task = document.createElement('li');
+        task.textContent = tasks[i].description;
+
+        domainTaskList.appendChild(task);
+    }
+}
+
+async function renderTasksWithDependency(tasks, user) {
+
+    const domainTaskList = document.createElement('ul');
+    domainTaskList.id = 'domain-task-list'
+
+    document.getElementById('domain-tasks').appendChild(domainTaskList);
+    for (let i = 0; i < tasks.length; i++) {
+        const task = document.createElement('li');
+        task.textContent = tasks[i].description;
+
+        domainTaskList.appendChild(task);
+
+        const dependency = document.createElement('button');
+        dependency.textContent = 'Add Dependency'
+        task.appendChild(dependency)
+
+        dependency.addEventListener('click', async () => {
+
+            try {
+                dependency.style.display = 'none';
+                const dependencyForm = document.createElement('form');
+                task.appendChild(dependencyForm);
+                select = document.createElement('select');
+                select.id = 'dependency';
+                label = document.createElement('label');
+                label.for = 'dependency';
+                dependencyForm.appendChild(label);
+                dependencyForm.appendChild(select);
+
+                for (let j = 0; j < tasks.length; j++) {
+                    option = document.createElement('option');
+                    option.value = tasks[j].id;
+                    option.textContent = tasks[j].description;
+                    select.appendChild(option)
+                };
+
+                const submitDependencyForm = document.createElement('button');
+                submitDependencyForm.textContent = 'Add';
+                dependencyForm.appendChild(submitDependencyForm);
+
+                dependencyForm.addEventListener('submit', async (event) => {
+                    try {
+                        dependency.style.display = '';
+                        dependencyForm.style.display = 'none';
+                        event.preventDefault();
+                        alert('not yet')
+
+                        //await addDependencyRequest(tasks[i], tasks[j], user);
+                    } catch (error) {
+                        alert(`Error: ${error.message}`)
+                    }
+
+
+                });
+            } catch (error) {
+                alert(`Error: ${error.message}`)
+            }
+
+        });
+
+    };
+
+}
+
+
 
 async function showTaskForm(domain, user) {
 
