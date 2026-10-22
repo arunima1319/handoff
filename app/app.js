@@ -326,12 +326,19 @@ function showTaskDetails(taskBullet, task, user) {
         taskCard.style.left = `${mouseX + 10}px`;
         taskCard.style.top = `${mouseY + 10}px`;
 
+        const userRes = await fetch(`/api/users/${task.assignee_id}`, {
+            method: 'GET',
+        });
+
+        const userData = await userRes.json();
+        if (!(userRes.ok)) {
+            throw new Error(`Could not get user: ${userData.error}`);
+        }
+
+        taskAssignee.textContent = `The task is assigned to ${userData.display_name}`;
 
 
-        taskAssignee.textContent = `${task.assignee_id}`;
-
-
-        const res = await fetch(`api/tasks/${task.id}/dependencies`, {
+        const res = await fetch(`/api/tasks/${task.id}/dependencies`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer: ${user.access_token}`,
@@ -342,14 +349,12 @@ function showTaskDetails(taskBullet, task, user) {
 
         if (!(res.ok)) {
             throw new Error(`Could not get dependency tasks: ${dependencyTasks.error}`);
-        } else {
-            for (let k = 0; k < dependencyTasks.length; k++) {
-                dependencyList.textContent = 'First complete these tasks:';
-                const bullet = document.createElement('li');
-                dependencyList.appendChild(bullet);
-                bullet.textContent = dependencyTasks[k].description;
-
-            }
+        }
+        for (let k = 0; k < dependencyTasks.length; k++) {
+            dependencyList.textContent = 'First complete these tasks:';
+            const bullet = document.createElement('li');
+            dependencyList.appendChild(bullet);
+            bullet.textContent = dependencyTasks[k].description;
 
         }
 
