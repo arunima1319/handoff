@@ -50,6 +50,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("GET /", http.FileServer(http.Dir("./app")))
 	mux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
+	mux.HandleFunc("GET /api/users/{userID}", apiCfg.handlerGetUserByID)
 	mux.HandleFunc("POST /api/domains", apiCfg.handlerCreateDomain)
 	mux.HandleFunc("POST /api/domains/{domainID}/users", apiCfg.handlerAddUserToDomain)
 	mux.HandleFunc("POST /api/domains/{domainID}/tasks", apiCfg.handlerCreateTask)
