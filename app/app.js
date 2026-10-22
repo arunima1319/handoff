@@ -354,7 +354,7 @@ async function renderTasksWithDependency(tasks, user) {
                     dependencyForm.appendChild(select);
 
                     for (let j = 0; j < tasks.length; j++) {
-                        if (!tasks[j].completed_at.Valid) {
+                        if (!tasks[j].completed_at.Valid && tasks[i].id != tasks[j].id) {
                             option = document.createElement('option');
                             option.value = tasks[j].id;
                             option.textContent = tasks[j].description;
