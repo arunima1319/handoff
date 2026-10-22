@@ -310,6 +310,30 @@ async function renderDomainPage(domain, user) {
     };
 }
 
+function showTaskDetails(taskBullet, task, user) {
+
+    taskCard = document.getElementById('task-card');
+
+    taskBullet.addEventListener('mousedown', (event) => {
+
+        const mouseX = event.pageX;
+        const mouseY = event.pageY;
+
+        taskCard.style.display = '';
+
+        taskCard.style.left = `${mouseX + 10}px`;
+        taskCard.style.top = `${mouseY + 10}px`;
+
+    });
+
+    taskBullet.addEventListener('mouseup', () => {
+        taskCard.style.display = 'none';
+    });
+
+
+
+}
+
 function renderTasks(tasks, user) {
     const domainTaskList = document.createElement('ul');
     domainTaskList.id = 'domain-task-list'
@@ -320,6 +344,7 @@ function renderTasks(tasks, user) {
         task.textContent = tasks[i].description;
 
         domainTaskList.appendChild(task);
+        showTaskDetails(task, tasks[i], user);
     }
 }
 
@@ -334,6 +359,7 @@ async function renderTasksWithDependency(tasks, user) {
         task.textContent = tasks[i].description;
 
         domainTaskList.appendChild(task);
+        showTaskDetails(task, tasks[i], user);
 
         if (!tasks[i].completed_at.Valid) {
             const dependency = document.createElement('button');
