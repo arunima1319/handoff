@@ -23,6 +23,7 @@ type apiTask struct {
 	DomainID    uuid.UUID    `json:"domain_id"`
 	AssigneeID  uuid.UUID    `json:"assignee_id"`
 	CompletedAt sql.NullTime `json:"completed_at"`
+	DomainName  string       `json:"domain_name"`
 }
 
 type createTaskRequest struct {
@@ -125,16 +126,13 @@ func (cfg *apiConfig) handlerGetUnblockedUserTasks(w http.ResponseWriter, r *htt
 
 	tasks := []apiTask{}
 	for _, dbTask := range dbTasks {
-		task := apiTask{
-			ID:          dbTask.ID,
-			CreatedAt:   dbTask.CreatedAt,
-			UpdatedAt:   dbTask.UpdatedAt,
-			Description: dbTask.Description,
-			DomainID:    dbTask.DomainID,
-			AssigneeID:  dbTask.AssigneeID,
-			CompletedAt: dbTask.CompletedAt,
+		task := mapTask(dbTask)
+		dbDomain, err := cfg.dbQueries.GetDomainByID(r.Context(), task.DomainID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("get domain from task's domainID: %w", err))
+			return
 		}
-
+		task.DomainName = dbDomain.Name
 		tasks = append(tasks, task)
 	}
 

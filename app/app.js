@@ -98,8 +98,11 @@ async function renderUserPage(user) {
         const taskList = document.createElement('ul');
         document.getElementById('actionable-tasks').appendChild(taskList);
         for (let i = 0; i < data.length; i++) {
+
+
+
             const task = document.createElement('li');
-            task.textContent = data[i].description;
+            task.textContent = `${data[i].description}   ---> in ${data[i].domain_name}`;
             taskList.appendChild(task);
             task.addEventListener('click', async () => {
 
