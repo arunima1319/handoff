@@ -95,12 +95,36 @@ async function renderUserPage(user) {
     if (!res.ok) {
         throw new Error(`Failed to get tasks: ${data.error}`)
     } else {
-        taskList = document.createElement('ul');
+        const taskList = document.createElement('ul');
         document.getElementById('actionable-tasks').appendChild(taskList);
         for (let i = 0; i < data.length; i++) {
-            task = document.createElement('li');
+            const task = document.createElement('li');
             task.textContent = data[i].description;
             taskList.appendChild(task);
+            task.addEventListener('click', async () => {
+
+                try {
+                    const res = await fetch(`/api/tasks/${data[i].id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${user.access_token}`,
+                        },
+                        body: JSON.stringify({ completed: true }),
+                    });
+
+                    const checkedTask = await res.json();
+
+                    if (!res.ok) {
+                        throw new Error(`Could not check off task: ${checkedTask.error}`);
+                    } else {
+                        task.style.textDecoration = 'line-through 3px';
+                    }
+                } catch (error) {
+                    alert(`Error: ${error.message}`)
+                }
+
+
+            });
         };
     };
 
