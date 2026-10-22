@@ -312,9 +312,11 @@ async function renderDomainPage(domain, user) {
 
 function showTaskDetails(taskBullet, task, user) {
 
-    taskCard = document.getElementById('task-card');
+    const taskCard = document.getElementById('task-card');
+    const taskAssignee = document.getElementById('task-assignee');
+    const dependencyList = document.getElementById('task-dependencies');
 
-    taskBullet.addEventListener('mousedown', (event) => {
+    taskBullet.addEventListener('mousedown', async (event) => {
 
         const mouseX = event.pageX;
         const mouseY = event.pageY;
@@ -324,9 +326,38 @@ function showTaskDetails(taskBullet, task, user) {
         taskCard.style.left = `${mouseX + 10}px`;
         taskCard.style.top = `${mouseY + 10}px`;
 
+
+
+        taskAssignee.textContent = `${task.assignee_id}`;
+
+
+        const res = await fetch(`api/tasks/${task.id}/dependencies`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer: ${user.access_token}`,
+            },
+        });
+
+        const dependencyTasks = await res.json();
+
+        if (!(res.ok)) {
+            throw new Error(`Could not get dependency tasks: ${dependencyTasks.error}`);
+        } else {
+            for (let k = 0; k < dependencyTasks.length; k++) {
+                dependencyList.textContent = 'First complete these tasks:';
+                const bullet = document.createElement('li');
+                dependencyList.appendChild(bullet);
+                bullet.textContent = dependencyTasks[k].description;
+
+            }
+
+        }
+
     });
 
     taskBullet.addEventListener('mouseup', () => {
+        dependencyList.innerHTML = '';
+        taskAssignee.textContent = '';
         taskCard.style.display = 'none';
     });
 
