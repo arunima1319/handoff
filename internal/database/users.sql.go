@@ -56,6 +56,27 @@ func (q *Queries) DeleteAllUsers(ctx context.Context) error {
 	return err
 }
 
+const getAssigneeNameByTaskID = `-- name: GetAssigneeNameByTaskID :one
+
+SELECT users.id, users.created_at, users.updated_at, users.email, users.display_name, users.hashed_password FROM users JOIN tasks
+ON users.id = tasks.assignee_id
+WHERE tasks.id = $1
+`
+
+func (q *Queries) GetAssigneeNameByTaskID(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getAssigneeNameByTaskID, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.DisplayName,
+		&i.HashedPassword,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 
 SELECT id, created_at, updated_at, email, display_name, hashed_password FROM users 
@@ -64,6 +85,26 @@ WHERE email = $1
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.DisplayName,
+		&i.HashedPassword,
+	)
+	return i, err
+}
+
+const getUserByID = `-- name: GetUserByID :one
+
+SELECT id, created_at, updated_at, email, display_name, hashed_password FROM users 
+WHERE id = $1
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
