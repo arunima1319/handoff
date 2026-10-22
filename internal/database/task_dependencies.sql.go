@@ -30,14 +30,52 @@ func (q *Queries) CreateTaskDependency(ctx context.Context, arg CreateTaskDepend
 	return err
 }
 
-const getTaskDependenciesByTask = `-- name: GetTaskDependenciesByTask :many
+const getDependencyTasksByTaskID = `-- name: GetDependencyTasksByTaskID :many
+
+SELECT tasks.id, tasks.created_at, tasks.updated_at, tasks.description, tasks.domain_id, tasks.assignee_id, tasks.completed_at FROM tasks JOIN task_dependencies 
+ON tasks.id = task_dependencies.dependency_id
+WHERE task_dependencies.task_id = $1
+`
+
+func (q *Queries) GetDependencyTasksByTaskID(ctx context.Context, taskID uuid.UUID) ([]Task, error) {
+	rows, err := q.db.QueryContext(ctx, getDependencyTasksByTaskID, taskID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Task
+	for rows.Next() {
+		var i Task
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Description,
+			&i.DomainID,
+			&i.AssigneeID,
+			&i.CompletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTaskDependenciesByTaskID = `-- name: GetTaskDependenciesByTaskID :many
 
 SELECT task_id, dependency_id FROM task_dependencies
 WHERE task_id = $1
 `
 
-func (q *Queries) GetTaskDependenciesByTask(ctx context.Context, taskID uuid.UUID) ([]TaskDependency, error) {
-	rows, err := q.db.QueryContext(ctx, getTaskDependenciesByTask, taskID)
+func (q *Queries) GetTaskDependenciesByTaskID(ctx context.Context, taskID uuid.UUID) ([]TaskDependency, error) {
+	rows, err := q.db.QueryContext(ctx, getTaskDependenciesByTaskID, taskID)
 	if err != nil {
 		return nil, err
 	}
