@@ -34,6 +34,25 @@ type updateTaskRequest struct {
 	Completed bool `json:"completed"`
 }
 
+func (cfg *apiConfig) handlerGetDependencyTasks(w http.ResponseWriter, r *http.Request) {
+
+	taskID, err := uuid.Parse(r.PathValue("taskID"))
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "invalid task ID", fmt.Errorf("parse task ID: %w", err))
+		return
+	}
+
+	dbTasks, err := cfg.dbQueries.GetDependencyTasksByTaskID(r.Context(), taskID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("get db dependency tasks by task id: %w", err))
+		return
+	}
+
+	tasks := mapTasks(dbTasks)
+
+	respondWithJSON(w, http.StatusOK, tasks)
+}
+
 func (cfg *apiConfig) handlerUpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	userID, err := cfg.authenticateRequest(r)

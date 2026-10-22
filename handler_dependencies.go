@@ -131,7 +131,7 @@ func (cfg *apiConfig) checkForCycle(r *http.Request, visitedIDs map[uuid.UUID]st
 	//To check for cycle we are doing a DFS using recursion to find the original Task ID
 	//If task ID is found, there is a cycle, if not, there is not
 
-	dbDependencies, err := cfg.dbQueries.GetTaskDependenciesByTask(
+	dbDependencies, err := cfg.dbQueries.GetTaskDependenciesByTaskID(
 		r.Context(),
 		dependencyID,
 	)
