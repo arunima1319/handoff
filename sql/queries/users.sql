@@ -26,3 +26,10 @@ DELETE FROM users;
 
 SELECT * FROM users 
 WHERE email = $1; 
+
+-- name: GetAssigneeNameByTaskID :one
+
+SELECT users.* FROM users JOIN tasks
+ON users.id = tasks.assignee_id
+WHERE tasks.id = $1; 
+
