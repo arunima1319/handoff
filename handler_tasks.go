@@ -191,6 +191,17 @@ func (cfg *apiConfig) handlerCreateTask(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	dbDomain, err := cfg.dbQueries.GetDomainByID(r.Context(), domainUUID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, msgServerError, fmt.Errorf("get db domain from domain id: %w", err))
+		return
+	}
+
+	if dbDomain.Owner != userID {
+		respondWithError(w, http.StatusForbidden, msgForbiddenError, errors.New("non-owner attempting to create task"))
+		return
+	}
+
 	req := createTaskRequest{}
 
 	dec := json.NewDecoder(r.Body)
