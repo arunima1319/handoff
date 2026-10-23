@@ -367,16 +367,24 @@ function showTaskDetails(taskBullet, task, user) {
 function renderTasks(tasks, user) {
     const domainTaskList = document.createElement('ul');
     domainTaskList.id = 'domain-task-list'
+    const completedTaskList = document.createElement('ul');
+    completedTaskList.id = 'completed-task-list';
 
-    document.getElementById('domain-tasks').appendChild(domainTaskList);
+    document.getElementById('pending-domain-tasks').appendChild(domainTaskList);
+    document.getElementById('completed-domain-tasks').appendChild(completedTaskList);
+
     for (let i = 0; i < tasks.length; i++) {
         const task = document.createElement('li');
         const textSpan = document.createElement('span');
         textSpan.textContent = tasks[i].description;
         task.appendChild(textSpan);
-
-        domainTaskList.appendChild(task);
         showTaskDetails(textSpan, tasks[i], user);
+        if (tasks[i].completed_at.Valid) {
+            completedTaskList.appendChild(task);
+        } else {
+            domainTaskList.appendChild(task);
+        }
+
     }
 }
 
@@ -384,22 +392,25 @@ async function renderTasksWithDependency(tasks, user) {
 
     const domainTaskList = document.createElement('ul');
     domainTaskList.id = 'domain-task-list'
+    const completedTaskList = document.createElement('ul');
+    completedTaskList.id = 'completed-task-list';
 
-    document.getElementById('domain-tasks').appendChild(domainTaskList);
+    document.getElementById('pending-domain-tasks').appendChild(domainTaskList);
+    document.getElementById('completed-domain-tasks').appendChild(completedTaskList);
+
+
     for (let i = 0; i < tasks.length; i++) {
         const task = document.createElement('li');
         const textSpan = document.createElement('span');
         textSpan.textContent = tasks[i].description;
         task.appendChild(textSpan);
-
-        domainTaskList.appendChild(task);
         showTaskDetails(textSpan, tasks[i], user);
-
-        if (!tasks[i].completed_at.Valid) {
-
+        if (tasks[i].completed_at.Valid) {
+            completedTaskList.appendChild(task);
+        } else {
+            domainTaskList.appendChild(task);
             await showAddDependencyButton(task, tasks[i], tasks, user);
-
-        };
+        }
     };
 
 };
