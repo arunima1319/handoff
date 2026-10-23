@@ -144,8 +144,8 @@ async function renderUserPage(user) {
     if (!resDomain.ok) {
         throw new Error(`Failed to get domains: ${dataDomain.error}`)
     } else {
-        domainList = document.createElement('ul');
-        domainsSection = document.getElementById('domains')
+        const domainList = document.createElement('ul');
+        const domainsSection = document.getElementById('domains')
         domainsSection.appendChild(domainList);
 
         const createDomainButton = document.createElement('button');
@@ -634,9 +634,13 @@ async function createTask(domain, user, tasks, assignee_id, description) {
         throw new Error(`Failed to create task: ${task.error}`)
     } else {
         const newTask = document.createElement('li');
-        newTask.textContent = `${task.description}`;
         newTask.id = `${task.id}`;
-        showTaskDetails(newTask, task, user);
+        const textSpan = document.createElement('span');
+        textSpan.textContent = `${task.description}`;
+        newTask.appendChild(textSpan);
+        showTaskDetails(textSpan, task, user);
+
+        tasks.push(task);
         showAddDependencyButton(newTask, task, tasks, user);
 
         document.getElementById('domain-task-list').appendChild(newTask);
