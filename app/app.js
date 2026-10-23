@@ -613,6 +613,7 @@ async function createTask(domain, user, assignee_id, description) {
         const newTask = document.createElement('li');
         newTask.textContent = `${task.description}`;
         newTask.id = `${task.id}`;
+        showTaskDetails(newTask, task, user);
 
         document.getElementById('domain-task-list').appendChild(newTask);
 
