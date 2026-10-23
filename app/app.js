@@ -292,42 +292,9 @@ async function renderDomainPage(domain, user) {
 
         buttonAddUser.addEventListener('click', async () => {
 
+
             try {
-                const userForm = document.getElementById('add-user-form');
-                userForm.style.display = 'block';
-                buttonAddUser.style.display = 'none';
-
-                userForm.addEventListener('submit', async (event) => {
-
-                    try {
-                        event.preventDefault();
-                        userForm.style.display = 'none';
-                        buttonAddUser.style.display = 'block';
-
-                        const email = document.getElementById('member').value;
-                        const res = await fetch(`api/domains/${domain.id}/users`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${user.access_token}`,
-                            },
-                            body: JSON.stringify({ email }),
-                        });
-
-                        const data = await res.json();
-                        if (!res.ok) {
-                            throw new Error(`Could not add user to domain: ${data.error}`)
-                        } else {
-                            alert(`${data.message}`)
-                        }
-                    } catch (error) {
-                        alert(`${error.message}`)
-                    }
-
-
-
-                })
-
+                await showUserForm(domain, user)
             } catch (error) {
                 alert(`Error: ${error.message}`)
             }
@@ -498,6 +465,65 @@ async function addDependencyRequest(taskID, dependencyID, user) {
         alert(`${data.message}`)
     }
 
+}
+
+async function showUserForm(domain, user) {
+
+    const userForm = document.createElement('form');
+    const memberLabel = document.createElement('label');
+    memberLabel.for = 'member';
+    memberLabel.textContent = 'User Email';
+    memberLabel.placeholder = 'xyz@google.com';
+
+    const memberInput = document.createElement('input');
+    memberInput.id = 'member';
+    memberInput.required = true;
+
+    const submitAddUser = document.createElement('button')
+    submitAddUser.textContent = 'Add';
+
+    userForm.appendChild(memberLabel);
+    userForm.appendChild(memberInput);
+    userForm.appendChild(submitAddUser);
+
+    const buttonAddUser = document.getElementById('add-user-button');
+    buttonAddUser.style.display = 'none';
+
+    const domainPage = document.getElementById('domain-page');
+    domainPage.appendChild(userForm);
+
+
+
+    userForm.addEventListener('submit', async (event) => {
+
+        try {
+            event.preventDefault();
+            const email = document.getElementById('member').value;
+            buttonAddUser.style.display = '';
+            userForm.remove();
+
+
+
+            const res = await fetch(`api/domains/${domain.id}/users`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.access_token}`,
+                },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(`Could not add user to domain: ${data.error}`)
+            } else {
+                alert(`${data.message}`)
+            }
+        } catch (error) {
+            alert(`${error.message}`)
+        }
+
+    });
 }
 
 async function showTaskForm(domain, user) {
