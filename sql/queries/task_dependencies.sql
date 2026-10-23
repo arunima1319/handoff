@@ -15,4 +15,5 @@ WHERE task_id = $1;
 
 SELECT tasks.* FROM tasks JOIN task_dependencies 
 ON tasks.id = task_dependencies.dependency_id
-WHERE task_dependencies.task_id = $1; 
+WHERE tasks.completed_at IS NULL 
+AND task_dependencies.task_id = $1; 

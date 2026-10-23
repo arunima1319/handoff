@@ -34,7 +34,8 @@ const getDependencyTasksByTaskID = `-- name: GetDependencyTasksByTaskID :many
 
 SELECT tasks.id, tasks.created_at, tasks.updated_at, tasks.description, tasks.domain_id, tasks.assignee_id, tasks.completed_at FROM tasks JOIN task_dependencies 
 ON tasks.id = task_dependencies.dependency_id
-WHERE task_dependencies.task_id = $1
+WHERE tasks.completed_at IS NULL 
+AND task_dependencies.task_id = $1
 `
 
 func (q *Queries) GetDependencyTasksByTaskID(ctx context.Context, taskID uuid.UUID) ([]Task, error) {
