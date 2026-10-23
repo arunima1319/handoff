@@ -502,15 +502,39 @@ async function addDependencyRequest(taskID, dependencyID, user) {
 
 async function showTaskForm(domain, user) {
 
+    console.log('showTaskForm called');
+
+    const taskForm = document.createElement('form');
+    const descriptionLabel = document.createElement('label');
+    descriptionLabel.for = 'description';
+    descriptionLabel.textContent = 'Description';
+    descriptionLabel.placeholder = 'Call Sangita';
+
+    const descriptionInput = document.createElement('input');
+    descriptionInput.id = 'description';
+    descriptionInput.required = true;
+
+    const assigneeLabel = document.createElement('assignee');
+    assigneeLabel.for = 'assignee';
+    assigneeLabel.textContent = 'Assignee';
+
+    const selectAssignee = document.createElement('select');
+    selectAssignee.id = 'assignee';
+
+    const submitCreatedTask = document.createElement('button')
+    submitCreatedTask.textContent = 'Create';
+
+    taskForm.appendChild(descriptionLabel);
+    taskForm.appendChild(descriptionInput);
+    taskForm.appendChild(assigneeLabel);
+    taskForm.appendChild(selectAssignee);
+    taskForm.appendChild(submitCreatedTask)
+
+
     document.getElementById('create-task-button').style.display = 'none';
 
-    const domainPage = document.getElementById('domain-Page');
-
-    const taskForm = document.getElementById('task-form');
-    taskForm.style.display = 'block';
-
-    const selectAssignee = document.getElementById('assignee');
-
+    const domainPage = document.getElementById('domain-page');
+    domainPage.appendChild(taskForm)
 
     assignees = await getDomainUsers(domain, user);
 
@@ -526,8 +550,9 @@ async function showTaskForm(domain, user) {
         event.preventDefault();
         const assignee_id = selectAssignee.value;
         const description = document.getElementById('description').value;
-        document.getElementById('create-task-button').style.display = "block";
-        document.getElementById('task-form').style.display = 'none';
+        document.getElementById('create-task-button').style.display = '';
+        taskForm.remove();
+
         try {
             await createTask(domain, user, assignee_id, description);
         } catch (error) {
