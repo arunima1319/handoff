@@ -371,10 +371,12 @@ function renderTasks(tasks, user) {
     document.getElementById('domain-tasks').appendChild(domainTaskList);
     for (let i = 0; i < tasks.length; i++) {
         const task = document.createElement('li');
-        task.textContent = tasks[i].description;
+        const textSpan = document.createElement('span');
+        textSpan.textContent = tasks[i].description;
+        task.appendChild(textSpan);
 
         domainTaskList.appendChild(task);
-        showTaskDetails(task, tasks[i], user);
+        showTaskDetails(textSpan, tasks[i], user);
     }
 }
 
@@ -386,10 +388,12 @@ async function renderTasksWithDependency(tasks, user) {
     document.getElementById('domain-tasks').appendChild(domainTaskList);
     for (let i = 0; i < tasks.length; i++) {
         const task = document.createElement('li');
-        task.textContent = tasks[i].description;
+        const textSpan = document.createElement('span');
+        textSpan.textContent = tasks[i].description;
+        task.appendChild(textSpan);
 
         domainTaskList.appendChild(task);
-        showTaskDetails(task, tasks[i], user);
+        showTaskDetails(textSpan, tasks[i], user);
 
         if (!tasks[i].completed_at.Valid) {
 
