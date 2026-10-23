@@ -102,7 +102,7 @@ func (cfg *apiConfig) handlerCreateTaskDependency(w http.ResponseWriter, r *http
 		return
 	}
 	if cycle {
-		respondWithError(w, http.StatusConflict, "leading to cylical dependency", errors.New("cycle detected!"))
+		respondWithError(w, http.StatusConflict, "dependency cycle detected", errors.New("cycle detected!"))
 		return
 	}
 
