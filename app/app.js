@@ -277,7 +277,7 @@ async function renderDomainPage(domain, user) {
         buttonCreateTask.addEventListener('click', async () => {
 
             try {
-                await showTaskForm(domain, user);
+                await showTaskForm(domain, user, data);
             } catch (error) {
                 alert(`Error: ${error.message}`)
             }
@@ -392,58 +392,67 @@ async function renderTasksWithDependency(tasks, user) {
         showTaskDetails(task, tasks[i], user);
 
         if (!tasks[i].completed_at.Valid) {
-            const dependency = document.createElement('button');
-            dependency.textContent = 'Add Dependency';
-            task.appendChild(dependency);
 
-            dependency.addEventListener('click', async () => {
+            await showAddDependencyButton(task, tasks[i], tasks, user);
 
+        };
+    };
+
+};
+
+async function showAddDependencyButton(taskBullet, presentTask, allTasks, user) {
+
+    const dependency = document.createElement('button');
+    dependency.textContent = 'Add Dependency';
+    taskBullet.appendChild(dependency);
+
+    dependency.addEventListener('click', async () => {
+
+        try {
+            dependency.style.display = 'none';
+            const dependencyForm = document.createElement('form');
+            taskBullet.appendChild(dependencyForm);
+            const select = document.createElement('select');
+            select.id = 'dependency';
+            const label = document.createElement('label');
+            label.for = 'dependency';
+            label.textContent = 'Dependency';
+            dependencyForm.appendChild(label);
+            dependencyForm.appendChild(select);
+
+            for (let j = 0; j < allTasks.length; j++) {
+                if (!allTasks[j].completed_at.Valid && presentTask.id != allTasks[j].id) {
+                    const option = document.createElement('option');
+                    option.value = allTasks[j].id;
+                    option.textContent = allTasks[j].description;
+                    select.appendChild(option)
+                }
+
+            };
+
+            const submitDependencyForm = document.createElement('button');
+            submitDependencyForm.textContent = 'Add';
+            dependencyForm.appendChild(submitDependencyForm);
+
+            dependencyForm.addEventListener('submit', async (event) => {
                 try {
-                    dependency.style.display = 'none';
-                    const dependencyForm = document.createElement('form');
-                    task.appendChild(dependencyForm);
-                    select = document.createElement('select');
-                    select.id = 'dependency';
-                    label = document.createElement('label');
-                    label.for = 'dependency';
-                    dependencyForm.appendChild(label);
-                    dependencyForm.appendChild(select);
+                    event.preventDefault();
+                    const dependencyID = select.value;
+                    dependency.style.display = '';
+                    dependencyForm.style.display = 'none';
 
-                    for (let j = 0; j < tasks.length; j++) {
-                        if (!tasks[j].completed_at.Valid && tasks[i].id != tasks[j].id) {
-                            option = document.createElement('option');
-                            option.value = tasks[j].id;
-                            option.textContent = tasks[j].description;
-                            select.appendChild(option)
-                        }
-
-                    };
-
-                    const submitDependencyForm = document.createElement('button');
-                    submitDependencyForm.textContent = 'Add';
-                    dependencyForm.appendChild(submitDependencyForm);
-
-                    dependencyForm.addEventListener('submit', async (event) => {
-                        try {
-                            event.preventDefault();
-                            const dependencyID = select.value;
-                            dependency.style.display = '';
-                            dependencyForm.style.display = 'none';
-
-                            await addDependencyRequest(tasks[i].id, dependencyID, user);
-                        } catch (error) {
-                            alert(`Error: ${error.message}`)
-                        }
-
-
-                    });
+                    await addDependencyRequest(presentTask.id, dependencyID, user);
                 } catch (error) {
                     alert(`Error: ${error.message}`)
-                };
-            });
-        };
+                }
 
-    };
+
+            });
+        } catch (error) {
+            alert(`Error: ${error.message}`)
+        }
+
+    });
 
 }
 
@@ -526,9 +535,8 @@ async function showUserForm(domain, user) {
     });
 }
 
-async function showTaskForm(domain, user) {
+async function showTaskForm(domain, user, tasks) {
 
-    console.log('showTaskForm called');
 
     const taskForm = document.createElement('form');
     const descriptionLabel = document.createElement('label');
@@ -580,7 +588,7 @@ async function showTaskForm(domain, user) {
         taskForm.remove();
 
         try {
-            await createTask(domain, user, assignee_id, description);
+            await createTask(domain, user, tasks, assignee_id, description);
         } catch (error) {
             alert(`Error: ${error.message}`)
         }
@@ -590,7 +598,7 @@ async function showTaskForm(domain, user) {
 };
 
 
-async function createTask(domain, user, assignee_id, description) {
+async function createTask(domain, user, tasks, assignee_id, description) {
 
     const res = await fetch(`/api/domains/${domain.id}/tasks`, {
         method: 'POST',
@@ -614,6 +622,7 @@ async function createTask(domain, user, assignee_id, description) {
         newTask.textContent = `${task.description}`;
         newTask.id = `${task.id}`;
         showTaskDetails(newTask, task, user);
+        showAddDependencyButton(newTask, task, tasks, user);
 
         document.getElementById('domain-task-list').appendChild(newTask);
 
@@ -627,12 +636,12 @@ async function getDomainUsers(domain, user) {
         method: 'GET',
     });
 
-    const data = await res.json()
+    const data = await res.json();
 
     if (!res.ok) {
         throw new Error(`Could not get users of domain: ${data.error}`);
     } else {
         return data;
-    }
+    };
 
 }
