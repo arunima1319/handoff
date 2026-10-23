@@ -240,7 +240,7 @@ async function renderUserPage(user) {
 async function renderDomainPage(domain, user) {
 
     document.getElementById('user-page').style.display = 'none';
-    document.getElementById('domain-page').style.display = 'block';
+    document.getElementById('domain-page').style.display = '';
     document.getElementById('domain-heading').textContent = domain.name;
 
 
@@ -266,13 +266,13 @@ async function renderDomainPage(domain, user) {
 
     if (domain.owner === user.id) {
 
-        const domainPage = document.getElementById('domain-page');
+        const OwnerControls = document.getElementById('owner-controls');
 
         const buttonCreateTask = document.createElement('button');
         buttonCreateTask.id = 'create-task-button';
         buttonCreateTask.textContent = 'Create New Task'
 
-        domainPage.appendChild(buttonCreateTask);
+        OwnerControls.appendChild(buttonCreateTask);
 
         buttonCreateTask.addEventListener('click', async () => {
 
@@ -288,7 +288,7 @@ async function renderDomainPage(domain, user) {
         buttonAddUser.id = 'add-user-button';
         buttonAddUser.textContent = 'Add User to Domain'
 
-        domainPage.appendChild(buttonAddUser);
+        OwnerControls.appendChild(buttonAddUser);
 
         buttonAddUser.addEventListener('click', async () => {
 

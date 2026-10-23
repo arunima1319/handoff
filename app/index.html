@@ -19,24 +19,31 @@
 
 
     <div id="auth-section">
-        <h2>Login</h2>
-        <form id="login-form">
-            <label for="login-email">Email</label>
-            <input id="login-email" type="email" placeholder="xyz@gmail.com" required>
-            <label for="login-password">Password</label>
-            <input id="login-password" type="password" required>
-            <button type="submit">Login</button>
-        </form>
-        <h2>Signup</h2>
-        <form id="signup-form">
-            <label for="signup-email">Email</label>
-            <input id="signup-email" type="email" placeholder="xyz@gmail.com" required>
-            <label for="signup-password">Password</label>
-            <input id="signup-password" type="password" required>
-            <label for="display-name">Display Name</label>
-            <input id="display-name" placeholder="Anuradha" required>
-            <button type="submit">Signup</button>
-        </form>
+
+        <div id="login-section">
+
+            <h2>Login</h2>
+            <form id="login-form" class="auth-form">
+                <label for="login-email">Email</label>
+                <input id="login-email" type="email" placeholder="xyz@gmail.com" required>
+                <label for="login-password">Password</label>
+                <input id="login-password" type="password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+        <div id="signup-section">
+            <h2>Signup</h2>
+            <form id="signup-form" class="auth-form">
+                <label for="signup-email">Email</label>
+                <input id="signup-email" type="email" placeholder="xyz@gmail.com" required>
+                <label for="signup-password">Password</label>
+                <input id="signup-password" type="password" required>
+                <label for="display-name">Display Name</label>
+                <input id="display-name" placeholder="Anuradha" required>
+                <button type="submit">Signup</button>
+            </form>
+        </div>
+
 
     </div>
 
@@ -52,16 +59,21 @@
 
     <div id="domain-page" style="display:none">
         <h2 id="domain-heading"></h2>
-        <div id="pending-domain-tasks">
-            <h3>Pending Tasks</h3>
-            <div id="task-card" style="display:none">
-                <p id="task-assignee"></p>
-                <ul id="task-dependencies">
-                </ul>
+        <div class="tasks-container">
+            <div id="pending-domain-tasks">
+                <h3>Pending Tasks</h3>
+                <div id="task-card" style="display:none">
+                    <p id="task-assignee"></p>
+                    <ul id="task-dependencies">
+                    </ul>
+                </div>
+            </div>
+            <div id="completed-domain-tasks">
+                <h3>Completed Tasks</h3>
             </div>
         </div>
-        <div id="completed-domain-tasks">
-            <h3>Completed Tasks</h3>
+        <div id="owner-controls">
+
         </div>
     </div>
 </body>

@@ -6,6 +6,10 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+body {
+    background-color: #f7f1df;
+}
+
 .subtitle {
     font-size: 0.5em;
     margin-left: 10px;
@@ -21,6 +25,49 @@ button {
 
 #task-card {
     position: absolute;
-    background-color: #4ddaf0;
+    background-color: #f2e4bd;
+    border: thin;
+    font-weight: bold;
     padding: 10px 24px;
+}
+
+h2,
+h3 {
+
+    margin: 20px;
+}
+
+#auth-section {
+    display: flex;
+}
+
+#login-section,
+#signup-section {
+    flex: 1;
+
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    margin: 20px;
+    width: 250px;
+    font-size: large;
+    font-weight: bold;
+    color: #204f2f;
+    gap: 10px;
+}
+
+.tasks-container {
+    display: flex;
+    margin: 50px;
+}
+
+#pending-domain-tasks,
+#completed-domain-tasks {
+    flex: 1;
+}
+
+#owner-controls {
+    margin: 50px;
 }
