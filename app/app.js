@@ -31,11 +31,11 @@ async function signup() {
         if (!res.ok) {
             throw new Error(`Failed to sign up: ${data.error}`)
         } else {
+
             accessToken = data.access_token;
-            let userName = data.display_name;
             document.getElementById('auth-section').style.display = 'none';
             document.getElementById('user-page').style.display = 'block';
-            document.getElementById('welcome-message').textContent = `Welcome ${userName}`;
+            await renderUserPage(data)
         }
     } catch (error) {
         alert(`Error: ${error.message}`)
