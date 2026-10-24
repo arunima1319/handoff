@@ -47,37 +47,14 @@ docker compose down
 
 Database data is preserved between restarts using a Docker volume.
 
-**Note**: The UI is still under development. Some features, such as adding task dependencies, checking off tasks, or adding other users to domains, are not yet accessible through the UI.
 
 ## Features
 
-- User registration and login
-
-- Creation and management of domains and tasks
-
-- Adding users to domains
-
-- Task assignment to domain members
-
-- Task dependencies, with circular dependencies prevented
-
+- Task dependency management with cycle detection using depth-first search (DFS)
 - Identification of actionable tasks based on completed dependencies
-
-
-## Technical Implementation
-
-- RESTful API built with Go
-
-- PostgreSQL database with relational constraints
-
-- JWT-based authentication and protected endpoints
-
-- Database migrations managed with Goose
-
-- Dependency cycle detection using depth-first search
-
-- Comprehensive error handling and logging
-
-- Front-end in HTML/CSS/Javascript
+- Authentication and authorization using Argon2id password hashing and JWTs
+- RESTful API developed in Go for user, domain, task, and dependency management
+- Relational data modelling involving five interconnected tables with database-level constraints to enforce data integrity
+- Comprehensive error handling and logging, for easy debugging
 
 
